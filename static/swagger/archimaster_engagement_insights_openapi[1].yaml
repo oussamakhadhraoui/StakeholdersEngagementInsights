@@ -1,0 +1,250 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Meeting API
+  description: API for managing meetings, roles, invitations, meeting types, and persons.
+servers:
+  - url: http://127.0.0.1:5000/api/v1
+
+paths:
+  /meetings:
+    get:
+      summary: Get all meetings
+      responses:
+        '200':
+          description: OK
+
+    post:
+      summary: Create a new meeting
+      operationId: createMeeting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Meeting"
+      responses:
+        '201':
+          description: Created
+
+  /meetings/{meetingId}:
+    parameters:
+      - name: meetingId
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    get:
+      summary: Get a meeting by ID
+      responses:
+        '200':
+          description: OK
+
+    put:
+      summary: Update a meeting by ID
+      operationId: updateMeeting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Meeting"
+      responses:
+        '200':
+          description: OK
+
+    delete:
+      summary: Delete a meeting by ID
+      responses:
+        '204':
+          description: No Content
+
+  /roles:
+    get:
+      summary: Get all roles
+      responses:
+        '200':
+          description: OK
+
+  /invitations:
+    get:
+      summary: Get all invitations
+      responses:
+        '200':
+          description: OK
+
+    post:
+      summary: Create a new invitation
+      operationId: createInvitation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Invitation"
+      responses:
+        '201':
+          description: Created
+
+  /invitations/{invitationId}:
+    parameters:
+      - name: invitationId
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    get:
+      summary: Get an invitation by ID
+      responses:
+        '200':
+          description: OK
+
+    put:
+      summary: Update an invitation by ID
+      operationId: updateInvitation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Invitation"
+      responses:
+        '200':
+          description: OK
+
+    delete:
+      summary: Delete an invitation by ID
+      responses:
+        '204':
+          description: No Content
+
+  /meeting-types:
+    get:
+      summary: Get all meeting types
+      responses:
+        '200':
+          description: OK
+
+  /persons:
+    get:
+      summary: Get all persons
+      responses:
+        '200':
+          description: OK
+
+    post:
+      summary: Create a new person
+      operationId: createPerson
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Person"
+      responses:
+        '201':
+          description: Created
+
+  /persons/{personId}:
+    parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    get:
+      summary: Get a person by ID
+      responses:
+        '200':
+          description: OK
+
+    put:
+      summary: Update a person by ID
+      operationId: updatePerson
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Person"
+      responses:
+        '200':
+          description: OK
+
+    delete:
+      summary: Delete a person by ID
+      responses:
+        '204':
+          description: No Content
+
+components:
+  schemas:
+    Meeting:
+      type: object
+      properties:
+        MeetingID:
+          type: integer
+        MeetingTypeID:
+          type: integer
+        StartDate:
+          type: string
+          format: date
+        StartTime:
+          type: string
+          format: time
+        EndDate:
+          type: string
+          format: date
+        EndTime:
+          type: string
+          format: time
+        Location:
+          type: string
+
+    Role:
+      type: object
+      properties:
+        RoleID:
+          type: integer
+        RoleName:
+          type: string
+
+    Invitation:
+      type: object
+      properties:
+        InvitationID:
+          type: integer
+        MeetingID:
+          type: integer
+        PersonID:
+          type: integer
+        RoleID:
+          type: integer
+        status:
+          type: string
+          enum:
+            - Required
+            - Optional
+
+    Person:
+      type: object
+      properties:
+        PersonID:
+          type: integer
+        FirstName:
+          type: string
+        LastName:
+          type: string
+        Email:
+          type: string
+        Phone:
+          type: string
+        Address:
+          type: string
+        AffiliationID:
+          type: integer
+        ManagerID:
+          type: integer
