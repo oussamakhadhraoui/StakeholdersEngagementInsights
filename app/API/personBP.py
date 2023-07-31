@@ -15,7 +15,7 @@ def create():
         email=data['Email'],
         phone=data['Phone'],
         address=data['Address'],
-        manager_id=data['ManagerID']
+        manager_id=data['ManagerID'] if 'ManagerID' in data and data['ManagerID'] is not None else None
     )
     db.session.add(new_person)
     db.session.commit()
@@ -24,7 +24,7 @@ def create():
 @person_api_bp.route('/', methods=['GET'])
 def index():
     people = Person.query.all()
-    return jsonify([person.to_dict() for person in people]), 200
+    return jsonify({'items': [person.to_dict() for person in people]}), 200
 
 @person_api_bp.route('/<int:id>', methods=['GET'])
 def show(id):
@@ -39,15 +39,16 @@ def update(id):
     data = request.get_json()
     person = Person.get_by_id(id)
     if person:
-        person.update({
-            'id': data.get('PersonID'),
+        update_data = {
             'first_name': data.get('FirstName'),
             'last_name': data.get('LastName'),
             'email': data.get('Email'),
             'phone': data.get('Phone'),
             'address': data.get('Address'),
-            'manager_id': data.get('ManagerID'),
-        })
+        }
+        if 'ManagerID' in data:
+            update_data['manager_id'] = data['ManagerID'] if data['ManagerID'] is not None else None
+        person.update(update_data)
         db.session.commit()
         return jsonify({'message': 'Person updated'}), 200
     else:

@@ -6,6 +6,9 @@ class Role(db.Model):
     id = db.Column('RoleID', db.Integer, primary_key=True, autoincrement=True)
     role_name = db.Column('RoleName', db.String(256))
 
+
+    
+
     def __init__(self, role_name):
         self.role_name = role_name
     

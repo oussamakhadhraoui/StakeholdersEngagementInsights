@@ -8,7 +8,7 @@ meetingType_api_bp = Blueprint('meetingType_api', __name__, url_prefix='/api/v1/
 def create():
     data = request.get_json()
     new_type = MeetingType(
-        type=data['type']
+        type=data['Type']
     )
     db.session.add(new_type)
     db.session.commit()
@@ -17,7 +17,7 @@ def create():
 @meetingType_api_bp.route('/', methods=['GET'])
 def index():
     types = MeetingType.query.all()
-    return jsonify([type.to_dict() for type in types]), 200
+    return jsonify({'items': [type.to_dict() for type in types]}), 200
 
 @meetingType_api_bp.route('/<int:id>', methods=['GET'])
 def show(id):
@@ -33,7 +33,6 @@ def update(id):
     type = MeetingType.get_by_id(id)
     if type:
         type.update({
-            'id': data.get('MeetingTypeID'),
             'type': data.get('Type'),
         })
         db.session.commit()

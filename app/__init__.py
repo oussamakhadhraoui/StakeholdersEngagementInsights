@@ -8,7 +8,7 @@ from flask import render_template
 db = SQLAlchemy()
 migrate = Migrate()
 
-from app.models import init_db
+
 from app.API.meetingBP import meeting_api_bp
 from app.API.meetingTypeBP import meetingType_api_bp
 from app.API.personBP import person_api_bp
@@ -45,6 +45,9 @@ def create_app():
     migrate.init_app(app, db)
 
     '''app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)'''
+    
+    #with app.app_context():
+        #db.create_all()          to create db
 
 
     'API BP'
@@ -65,6 +68,6 @@ def create_app():
 
     @app.route('/')
     def home():
-     return render_template('home.html')
+     return render_template('upcomingMeetings.html')
 
     return app

@@ -11,13 +11,16 @@ class Person(db.Model):
     address = db.Column('Address', db.String(256))
     manager_id = db.Column('ManagerID', db.Integer, db.ForeignKey('person.PersonID', ondelete='SET NULL'))
 
-    def __init__(self, first_name, last_name, email, phone, address, manager_id):
+
+    
+
+    def __init__(self, first_name, last_name, email, phone, address, manager_id=None):
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
         self.phone = phone
         self.address = address
-        self.manager_id = manager_id
+        self.manager_id = manager_id if manager_id is not None else None
         
     @classmethod
     def get_by_id(cls, id):
@@ -40,5 +43,6 @@ class Person(db.Model):
      self.email = data.get('email', self.email)
      self.phone = data.get('phone', self.phone)
      self.address = data.get('address', self.address)
-     self.manager_id = data.get('manager_id', self.manager_id)
+     if 'manager_id' in data:
+         self.manager_id = data['manager_id'] if data['manager_id'] is not None else None
 

@@ -1,12 +1,11 @@
 from flask import Blueprint, render_template, request, redirect
 import requests
-import json
 
 person_view_bp = Blueprint('person_view', __name__, url_prefix='/persons')
 
 @person_view_bp.route('/new', methods=['GET'])
 def new():
-    return render_template('newPerson.html')
+    return render_template('peopleList.html')
 
 @person_view_bp.route('/', methods=['POST'])
 def create():
@@ -16,18 +15,36 @@ def create():
 
 @person_view_bp.route('/', methods=['GET'])
 def index():
-    persons = requests.get('http://localhost:5000/api/v1/persons').json()
-    return render_template('personsList.html', persons=persons)
+    page = request.args.get('page', 1, type=int)
+    per_page = 5  
+
+    api_url = f'http://localhost:5000/api/v1/persons'
+    response = requests.get(api_url)
+    persons_data = response.json()
+
+    total_items = len(persons_data['items'])
+    total_pages = (total_items + per_page - 1) // per_page
+    start_index = (page - 1) * per_page
+    end_index = min(start_index + per_page, total_items)
+    persons = persons_data['items'][start_index:end_index]
+
+    return render_template('peopleList.html', persons=persons, pagination={
+        'has_prev': page > 1,
+        'has_next': page < total_pages,
+        'prev_num': page - 1,
+        'next_num': page + 1,
+        'current_page': page,
+        'total_pages': total_pages,
+    })
 
 @person_view_bp.route('/<int:id>', methods=['GET'])
 def show(id):
     person = requests.get(f'http://localhost:5000/api/v1/persons/{id}').json()
-    return render_template('person.html', person=person)
 
 @person_view_bp.route('/<int:id>/edit', methods=['GET'])
 def edit(id):
     person = requests.get(f'http://localhost:5000/api/v1/persons/{id}').json()
-    return render_template('editPerson.html', person=person)
+    return render_template('peopleList.html', person=person)
 
 @person_view_bp.route('/<int:id>', methods=['POST'])
 def update(id):
