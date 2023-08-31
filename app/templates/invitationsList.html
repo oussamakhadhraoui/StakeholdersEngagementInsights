@@ -48,22 +48,42 @@
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse align-items-end" id="navbarSupportedContent">
-          <ul class="navbar-nav me-auto">
-              <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" id="navbarDropdownButton" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                      Invitations
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" id="navbarDropdownButton" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Invitations
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" id="dropdownMeeting" data-label="Meeting" href="/meetings">Meetings</a></li>
+                        <li><a class="dropdown-item" id="dropdownMeetingType" data-label="Meeting type" href="/meeting-types">Meeting types</a></li>
+                        <li><a class="dropdown-item" id="dropdownRole" data-label="Role" href="/roles">Roles</a></li>
+                        <li><a class="dropdown-item" id="dropdownPerson" data-label="Person" href="/persons">People</a></li>
+                        <li><a class="dropdown-item" id="dropdownInvitation" data-label="Invitation" href="/invitations">Invitations</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" id="navbarDropdownButton2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      Affiliations
                   </a>
-                  <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdown">
-                      <li><a class="dropdown-item" id="dropdownMeeting" data-label="Meeting" href="/meetings">Meetings</a></li>
-                      <li><a class="dropdown-item" id="dropdownMeetingType" data-label="Meeting type" href="/meeting-types">Meeting types</a></li>
-                      <li><a class="dropdown-item" id="dropdownRole" data-label="Role" href="/roles">Roles</a></li>
-                      <li><a class="dropdown-item" id="dropdownPerson" data-label="Person" href="/persons">People</a></li>
-                      <li><a class="dropdown-item" id="dropdownInvitation" data-label="Invitation" href="/invitations">Invitations</a></li>
+                  <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdownButton2">
+                      <li><a class="dropdown-item" id="dropdownAffiliation" data-label="Affiliation" href="/affiliations">Affiliations</a></li>
+                      <li><a class="dropdown-item" id="dropdownAttendance" data-label="Attendance" href="/attendances">Attendance</a></li>
                   </ul>
               </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/charts">Charts</a>
+            </li>
           </ul>
       </div>    
       </div>
+      <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-body text-center" id="successModalMessage">
+            </div>
+          </div>
+        </div>
+      </div>  
     </nav>
   <div class="container my-4">
     <div class="d-flex justify-content-between align-items-center"> 
@@ -99,23 +119,38 @@
       </tbody>
     </table>    
 </div>
-  <nav aria-label="Page navigation" class="sticky-pagination">
+<nav aria-label="Page navigation" class="sticky-pagination">
     <ul class="pagination justify-content-end">
-        {% if pagination.has_prev %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('invitation_view.index', page=pagination.prev_num) }}">Previous</a></li>
-        {% endif %}
-
-        {% for page_num in range(1, pagination.total_pages + 1) %}
-        <li class="page-item {% if page_num == pagination.current_page %}active{% endif %}">
-          <a class="page-link" href="{{ url_for('invitation_view.index', page=page_num) }}">{{ page_num }}</a>
-        </li>
-        {% endfor %}
-
-        {% if pagination.has_next %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('invitation_view.index', page=pagination.next_num) }}">Next</a></li>
-        {% endif %}
-      </ul>
-    </nav>
+  
+      {% if pagination.has_prev %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('invitation_view.index', page=pagination.prev_num) }}">Previous</a></li>
+      {% endif %}
+  
+      {% set start_page = [pagination.current_page - 3, 1] | max %}
+      {% set end_page = [pagination.current_page + 3, pagination.total_pages] | min %}
+  
+      {% if start_page > 1 %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('invitation_view.index', page=1) }}">1</a></li>
+      <li class="page-item disabled"><span class="page-link">...</span></li>
+      {% endif %}
+  
+      {% for page_num in range(start_page, end_page + 1) %}
+      <li class="page-item {% if page_num == pagination.current_page %}active{% endif %}">
+        <a class="page-link" href="{{ url_for('invitation_view.index', page=page_num) }}">{{ page_num }}</a>
+      </li>
+      {% endfor %}
+  
+      {% if end_page < pagination.total_pages %}
+      <li class="page-item disabled"><span class="page-link">...</span></li>
+      <li class="page-item"><a class="page-link" href="{{ url_for('invitation_view.index', page=pagination.total_pages) }}">{{ pagination.total_pages }}</a></li>
+      {% endif %}
+  
+      {% if pagination.has_next %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('invitation_view.index', page=pagination.next_num) }}">Next</a></li>
+      {% endif %}
+  
+    </ul>
+  </nav>
     <div class="modal fade" id="InvitationModal" tabindex="-1" role="dialog" aria-labelledby="InvitationModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -134,7 +169,6 @@
                         <div class="form-group">
                             <label for="PersonID">Person: <span class="text-danger">*</span></label>
                             <select name="PersonID" id="PersonID" class="form-control" required>
-
                             </select>
                         </div>
                         <div class="form-group">
@@ -177,147 +211,210 @@
         </div>
     </div>
     <script>
-        $(document).ready(function(){
+        $(document).ready(function() {
             let mode = '';
     
+            function validateForm() {
+                let isValid = true;
+    
+                // Check all required fields
+                $("#invitationForm select[required]").each(function() {
+                    const parentDiv = $(this).closest('.form-group');
+    
+                    if ($(this).val() === null || $(this).val().trim() === "") {
+                        $(this).css("border", "1px solid red");
+                        if (!parentDiv.find('.error-message').length) {
+                            // Append an error message if it doesn't already exist
+                            parentDiv.append('<div class="error-message text-danger">Field required</div>');
+                        }
+                        isValid = false;
+                    } else {
+                        $(this).css("border", "");
+                        parentDiv.find('.error-message').remove(); // Remove the error message
+                    }
+                });
+    
+                return isValid;
+            }
+    
             function populateDropdown(url, dropdownId, textProperty) {
-             $.get(url, function(data) {
-             // Clear the dropdown
-             $('#' + dropdownId).html('');
-
-            // Assuming that the API returns an object with an "items" key, which contains the list of entities.
-            // We'll adjust our loop to iterate over data.items instead of data.
-
-            // Populate the dropdown options
-             $.each(data.items, function(index, item) {
-              $('#' + dropdownId)
-              .append($("<option></option>")
-              .attr("value", item.id)
-             .text(item[textProperty]));
-             });
-            });
-        }
-
-        // Usage
-        populateDropdown("/api/v1/meetings", "MeetingID", "title");
-        populateDropdown("/api/v1/persons", "PersonID", "email");
-        populateDropdown("/api/v1/roles", "RoleID", "role_name");
-
+                $.get(url, function(data) {
+                    // Clear the dropdown
+                    $('#' + dropdownId).html('');
     
-        $("#saveChangesButton").click(function(){
-                $("#invitationForm").trigger('submit');
-            });
+                    // Assuming that the API returns an object with an "items" key, which contains the list of entities.
+                    // We'll adjust our loop to iterate over data.items instead of data.
+                    // Sort the items by the textProperty
+        data.items.sort(function(a, b) {
+            return a[textProperty].localeCompare(b[textProperty]);
+        });
     
-        $(".editButton").click(function(){
+                    // Populate the dropdown options
+                    $.each(data.items, function(index, item) {
+                        $('#' + dropdownId)
+                            .append($("<option></option>")
+                                .attr("value", item.id)
+                                .text(item[textProperty]));
+                    });
+                });
+            }
+    
+            // Usage
+            populateDropdown("/api/v1/meetings", "MeetingID", "title");
+            populateDropdown("/api/v1/persons", "PersonID", "email");
+            populateDropdown("/api/v1/roles", "RoleID", "role_name");
+    
+            $("#saveChangesButton").click(function() {
+                if (validateForm()) { // Validate the form before submitting
+                    $("#invitationForm").trigger('submit');
+                }
+            });
+            function showPopup(message) {
+  // Set the message in the modal
+  $("#successModalMessage").text(message);
+
+  // Show the modal
+  $("#successModal").modal("show");
+
+  // Hide the modal after 3 seconds (3000 milliseconds)
+  setTimeout(function() {
+    $("#successModal").modal("hide");
+  }, 4000);
+}
+    
+            $(".editButton").click(function() {
                 mode = 'edit';
     
-            const invitationId = $(this).attr("data-id");
+                const invitationId = $(this).attr("data-id");
     
-            $.get("/api/v1/invitations/" + invitationId, function(data) {
-                $("#invitationID").val(data.id);
-                $("#MeetingID").val(data.meeting_id);
-                $("#PersonID").val(data.person_id);
-                $("#RoleID").val(data.role_id);
-                $("#Status").val(data.status);
+                $.get("/api/v1/invitations/" + invitationId, function(data) {
+                    $("#invitationID").val(data.id);
+                    $("#MeetingID").val(data.meeting_id);
+                    $("#PersonID").val(data.person_id);
+                    $("#RoleID").val(data.role_id);
+                    $("#Status").val(data.status);
     
-                $("#InvitationModalLabel").text('Edit Invitation');
-                $("#saveChangesButton").text('Save Changes');
+                    $("#InvitationModalLabel").text('Edit Invitation');
+                    $("#saveChangesButton").text('Save Changes');
+    
+                    $("#InvitationModal").modal("show");
+                });
+            });
+    
+            // Event handler for when the invitation modal is closed
+            $("#InvitationModal").on('hidden.bs.modal', function() {
+                if (mode === 'create') {
+                    // Clear the form fields
+                    $("#invitationID").val('');
+                    $("#MeetingID").val('');
+                    $("#PersonID").val('');
+                    $("#RoleID").val('');
+                    $("#Status").val('');
+    
+                    // Remove any validation messages
+                    $("#invitationForm select").css("border", "");
+                    $(".error-message").remove();
+    
+                    // Change the modal title and button text back to 'Create'
+                    $("#InvitationModalLabel").text('Add New Invitation');
+                    $("#saveChangesButton").text('Create Invitation');
+                }
+            });
+    
+            $("#addNewInvitationButton").click(function() {
+                mode = 'create';
+    
+                $("#invitationID").val('');
+                $("#MeetingID").val('');
+                $("#PersonID").val('');
+                $("#RoleID").val('');
+                $("#Status").val('');
+    
+                $("#InvitationModalLabel").text('Add New Invitation');
+                $("#saveChangesButton").text('Create Invitation');
     
                 $("#InvitationModal").modal("show");
             });
-        });
     
-        $("#addNewInvitationButton").click(function(){
-            mode = 'create';
+            $("#invitationForm").on("submit", function(e) {
+                e.preventDefault();
     
-            $("#invitationID").val('');
-            $("#MeetingID").val('');
-            $("#PersonID").val('');
-            $("#RoleID").val('');
-            $("#Status").val('');
+                let data = {
+                    "MeetingID": $("#MeetingID").val(),
+                    "PersonID": $("#PersonID").val(),
+                    "RoleID": $("#RoleID").val(),
+                    "Status": $("#Status").val()
+                };
     
-            $("#InvitationModalLabel").text('Add New Invitation');
-            $("#saveChangesButton").text('Create Invitation');
-    
-            $("#InvitationModal").modal("show");
-        });
-    
-        $("#invitationForm").on("submit", function(e) {
-            e.preventDefault();
-    
-            let data = {
-                "MeetingID": $("#MeetingID").val(),
-                "PersonID": $("#PersonID").val(),
-                "RoleID": $("#RoleID").val(),
-                "Status": $("#Status").val()
-            };
-    
-            if (mode === 'edit') {
-                const invitationId = $("#invitationID").val();
-                fetch(`/api/v1/invitations/${invitationId}`, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    $("#InvitationModal").modal("hide");
-                    location.reload();
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                });
-            }
-            else if (mode === 'create') {
-                fetch(`/api/v1/invitations`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    $("#InvitationModal").modal("hide");
-                    location.reload();
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                });
-            }
-        });
-    
-        $(".deleteButton").click(function(){
-            const invitationId = $(this).attr("data-id");
-    
-            $("#invitationToDelete").val(invitationId);
-    
-            $("#deleteInvitationConfirmationModal").modal("show");
-        });
-    
-        $("#confirmInvitationDeleteButton").click(function(){
-            const invitationId = $("#invitationToDelete").val();
-    
-            fetch(`/api/v1/invitations/${invitationId}`, {
-                method: "DELETE"
+                if (mode === 'edit') {
+                    const invitationId = $("#invitationID").val();
+                    fetch(`/api/v1/invitations/${invitationId}`, {
+                            method: "PUT",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify(data)
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            $("#InvitationModal").modal("hide");
+                            showPopup("Invitation Edited"); // Show the popup
+                            location.reload();
+                        })
+                        .catch((error) => {
+                            console.error('Error:', error);
+                        });
+                    } else if (mode === 'create') {
+            
+            fetch(`/api/v1/invitations`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(data)
             })
-            .then(response => {
-                if (response.ok) {
-                    $("#deleteInvitationConfirmationModal").modal("hide");
-                    location.reload();
-                } else {
-                    console.error('Error:', response.statusText);
+                        .then(response => response.json())
+                        .then(data => {
+                            $("#InvitationModal").modal("hide");
+                            showPopup("Invitation Created"); // Show the popup
+                            location.reload();
+                        })
+                        .catch((error) => {
+                            console.error('Error:', error);
+                        });
                 }
-            })
-            .catch((error) => {
-                console.error('Error:', error);
+            });
+    
+            $(".deleteButton").click(function() {
+                const invitationId = $(this).attr("data-id");
+    
+                $("#invitationToDelete").val(invitationId);
+    
+                $("#deleteInvitationConfirmationModal").modal("show");
+            });
+    
+            $("#confirmInvitationDeleteButton").click(function() {
+                const invitationId = $("#invitationToDelete").val();
+    
+                fetch(`/api/v1/invitations/${invitationId}`, {
+                        method: "DELETE"
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            $("#deleteInvitationConfirmationModal").modal("hide");
+                            showPopup("Invitation Deleted"); // Show the popup
+                            location.reload();
+                        } else {
+                            console.error('Error:', response.statusText);
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                    });
             });
         });
-    });
-    </script>                               
-<footer class="footer bg-dark navbar-dark">
+    </script>                                   
+ <footer class="footer bg-dark navbar-dark">
     <div class="container-xxl footer-terms">
       <ul class="navbar-nav gap-md-3">
         <li class="fw-bold">© Orange 2023</li>

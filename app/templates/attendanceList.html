@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html>
+<head>  
+  <title>Stakeholders Engagement Insights</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boosted/dist/css/boosted.min.css">
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+    }
+    .content {
+      flex-grow: 1;
+    }
+    .footer {
+      margin-top: auto;
+       
+    }
+    .sticky-pagination {
+      position: sticky;
+      bottom: 0;
+      z-index: 1000; 
+      background-color: #fff; 
+      padding: 20px; 
+    }
+  </style>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/boosted/dist/js/boosted.bundle.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boosted/dist/css/boosted.min.css">
+  <style>
+      .boosted-orange {
+        color: #FF7900;
+      }
+  </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+          <img src="{{ url_for('static', filename='assets/orange.svg') }}" width="50" height="50" alt="Home" loading="lazy">
+          <span class="ms-2 boosted-orange">Meeting Insights</span>
+          <span class="ms-2">Home</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse align-items-end" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" id="navbarDropdownButton" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Meetings
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" id="dropdownMeeting" data-label="Meeting" href="/meetings">Meetings</a></li>
+                        <li><a class="dropdown-item" id="dropdownMeetingType" data-label="Meeting type" href="/meeting-types">Meeting types</a></li>
+                        <li><a class="dropdown-item" id="dropdownRole" data-label="Role" href="/roles">Roles</a></li>
+                        <li><a class="dropdown-item" id="dropdownPerson" data-label="Person" href="/persons">People</a></li>
+                        <li><a class="dropdown-item" id="dropdownInvitation" data-label="Invitation" href="/invitations">Invitations</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" id="navbarDropdownButton2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      Attendance
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdownButton2">
+                      <li><a class="dropdown-item" id="dropdownAffiliation" data-label="Affiliation" href="/affiliations">Affiliations</a></li>
+                      <li><a class="dropdown-item" id="dropdownAttendance" data-label="Attendance" href="/attendances">Attendance</a></li>
+                  </ul>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/charts">Charts</a>
+            </li>
+          </ul>
+      </div>    
+      </div>
+      <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-body text-center" id="successModalMessage">
+            </div>
+          </div>
+        </div>
+      </div>  
+    </nav>
+    <div class="container my-4">
+        <div class="d-flex justify-content-between align-items-center"> 
+            <h2 class="boosted-orange">Attendance</h2>
+            <div class="d-flex">
+             <button id="addNewAttendanceButton" class="btn btn-secondary">Add New Attendance</button> 
+             <input type="file" id="uploadCsvFile" accept=".csv" style="display: none;" />
+             <button id="uploadCsvFileButton" class="btn btn-secondary ml-2">Upload CSV File</button> 
+            </div> 
+        </div>
+        <table class="table w-100">
+            <caption class="visually-hidden">Attendance</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Attendance ID</th>
+                    <th scope="col">Person </th>
+                    <th scope="col">Meeting </th>
+                    <th scope="col">Attendance Duration</th>
+                    <th scope="col" class="d-flex justify-content-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for attendance in attendances %}
+                <tr>
+                    <td>{{ attendance.id }}</td>
+                    <td>{{ attendance.person_email }}</td>
+                    <td>
+                        {{ attendance.meeting_title }} - 
+                        {{ ' '.join(attendance.start_date.split()[:3]) if attendance.start_date else 'N/A' }}
+                        </td>
+                    <td>{{ attendance.attendance_duration if attendance.attendance_duration else 'N/A' }}</td>
+                    <td class="d-flex justify-content-end">
+                        <a href="#" class="btn btn-primary editButton" data-id="{{ attendance.id }}">Edit</a>
+                        <a href="#" class="btn btn-danger deleteButton" data-id="{{ attendance.id }}">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>      
+    </div>    
+  <nav aria-label="Page navigation" class="sticky-pagination">
+    <ul class="pagination justify-content-end">
+  
+      {% if pagination.has_prev %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('attendance_view.index', page=pagination.prev_num) }}">Previous</a></li>
+      {% endif %}
+  
+      {% set start_page = [pagination.current_page - 3, 1] | max %}
+      {% set end_page = [pagination.current_page + 3, pagination.total_pages] | min %}
+  
+      {% if start_page > 1 %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('attendance_view.index', page=1) }}">1</a></li>
+      <li class="page-item disabled"><span class="page-link">...</span></li>
+      {% endif %}
+  
+      {% for page_num in range(start_page, end_page + 1) %}
+      <li class="page-item {% if page_num == pagination.current_page %}active{% endif %}">
+        <a class="page-link" href="{{ url_for('attendance_view.index', page=page_num) }}">{{ page_num }}</a>
+      </li>
+      {% endfor %}
+  
+      {% if end_page < pagination.total_pages %}
+      <li class="page-item disabled"><span class="page-link">...</span></li>
+      <li class="page-item"><a class="page-link" href="{{ url_for('attendance_view.index', page=pagination.total_pages) }}">{{ pagination.total_pages }}</a></li>
+      {% endif %}
+  
+      {% if pagination.has_next %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('attendance_view.index', page=pagination.next_num) }}">Next</a></li>
+      {% endif %}
+  
+    </ul>
+  </nav>
+  <div class="modal fade" id="AttendanceModal" tabindex="-1" role="dialog" aria-labelledby="AttendanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="AttendanceModalLabel">Attendance Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="attendanceForm" method="post">
+                    <input type="hidden" id="attendanceID" name="AttendanceID">
+                    <div class="form-group">
+                        <label for="PersonID">Person: <span class="text-danger">*</span></label>
+                        <select name="PersonID" id="PersonID" class="form-control" required>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="MeetingID">Meeting: <span class="text-danger">*</span></label>
+                        <select name="MeetingID" id="MeetingID" class="form-control" required>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="AttendanceDuration">Attendance Duration:</label>
+                        <input type="time" name="AttendanceDuration" id="AttendanceDuration" class="form-control">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveAttendanceChangesButton">Save changes</button>
+            </div>
+        </div>
+    </div>
+  </div>   
+  <div class="modal fade" id="deleteAttendanceConfirmationModal" tabindex="-1" role="dialog" aria-labelledby="deleteAttendanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteAttendanceModalLabel">Delete Attendance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this attendance record?
+                <input type="hidden" id="attendanceToDelete" value="">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmAttendanceDeleteButton">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+$(document).ready(function() {
+    let mode = '';
+
+    // Function to populate the dropdowns
+    function populateDropdowns(selectedPersonId = null, selectedMeetingId = null) {
+        const personSelect = $("#PersonID");
+        personSelect.empty(); // Clear existing options
+        // Default option for Person dropdown
+        personSelect.append($('<option>', {
+            value: "",
+            text: "-- Select Person --"
+        }));
+
+        const meetingSelect = $("#MeetingID");
+        meetingSelect.empty(); // Clear existing options
+        // Default option for Meeting dropdown
+        meetingSelect.append($('<option>', {
+            value: "",
+            text: "-- Select Meeting --"
+        }));
+
+        // Fetch persons
+        $.get("/api/v1/persons", function(data) {
+            // Assuming each person object has properties 'id' and 'email'
+            data.items.forEach(person => {
+                personSelect.append($('<option>', {
+                    value: person.id,
+                    text: person.email,
+                    selected: person.id === selectedPersonId
+                }));
+            });
+        });
+
+        // Fetch meetings
+        $.get("/api/v1/meetings", function(data) {
+            // Assuming each meeting object has properties 'id' and 'title'
+            data.items.forEach(meeting => {
+                meetingSelect.append($('<option>', {
+                    value: meeting.id,
+                    text: meeting.title,
+                    selected: meeting.id === selectedMeetingId
+                }));
+            });
+        });
+    }
+
+    function validateAttendanceForm() {
+        let isValid = true;
+
+        $("#attendanceForm input[required], #attendanceForm select[required]").each(function() {
+            const parentDiv = $(this).closest('.form-group');
+
+            if ($(this).val().trim() === "") {
+                $(this).css("border", "1px solid red");
+                if (!parentDiv.find('.error-message').length) {
+                    parentDiv.append('<div class="error-message text-danger">Field required</div>');
+                }
+                isValid = false;
+            } else {
+                $(this).css("border", "");
+                parentDiv.find('.error-message').remove();
+            }
+        });
+
+        return isValid;
+    }
+
+    function showPopup(message) {
+        // Assuming you will have a successModal for Attendance too.
+        $("#successModalMessage").text(message);
+        $("#successModal").modal("show");
+        setTimeout(function() {
+            $("#successModal").modal("hide");
+        }, 4000);
+    }
+
+    $(".editButton").click(function() {
+        mode = 'edit';
+        const attendanceId = $(this).attr("data-id");
+
+        $.get("/api/v1/attendances/" + attendanceId, function(data) {
+            $("#attendanceID").val(data.id);
+            $("#AttendanceDuration").val(data.attendance_duration ? new Date(`1970-01-01T${data.attendance_duration}Z`).toISOString().substr(11, 8) : '');
+
+            $("#AttendanceModalLabel").text('Edit Attendance');
+            $("#saveAttendanceChangesButton").text('Save Changes');
+
+            // Populate the dropdowns with selected values before showing the modal
+            populateDropdowns(data.person_id, data.meeting_id);
+
+            $("#AttendanceModal").modal("show");
+        });
+    });
+
+    $("#AttendanceModal").on('hidden.bs.modal', function() {
+        $("#attendanceID").val('');
+        $("#PersonID").val('');
+        $("#MeetingID").val('');
+        $("#AttendanceDuration").val('');
+
+        $("#attendanceForm input, #attendanceForm select").css("border", "");
+        $(".error-message").remove();
+
+        if (mode === 'create') {
+            $("#AttendanceModalLabel").text('Add New Attendance');
+            $("#saveAttendanceChangesButton").text('Add Attendance');
+        }
+    });
+
+    $("#addNewAttendanceButton").click(function() {
+        mode = 'create';
+
+        $("#attendanceID").val('');
+        $("#AttendanceDuration").val('');
+
+        // Populate the dropdowns before showing the modal
+        populateDropdowns();
+
+        $("#AttendanceModalLabel").text('Add New Attendance');
+        $("#saveAttendanceChangesButton").text('Add Attendance');
+
+        $("#AttendanceModal").modal("show");
+    });
+
+    $("#attendanceForm").on("submit", function(e) {
+        e.preventDefault();
+
+        if (!validateAttendanceForm()) {
+            return;  // Do not proceed if the form is not valid
+        }
+
+        let data = {
+            "AttendanceID": $("#attendanceID").val(),
+            "PersonID": $("#PersonID").val(),
+            "MeetingID": $("#MeetingID").val(),
+            "AttendanceDuration": $("#AttendanceDuration").val().substr(0, 5)  // Trim seconds
+        };
+
+        if (mode === 'edit') {
+            const attendanceId = $("#attendanceID").val();
+            fetch(`/api/v1/attendances/${attendanceId}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    $("#AttendanceModal").modal("hide");
+                    showPopup("Attendance Updated");
+                    location.reload();
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        } else if (mode === 'create') {
+            fetch(`/api/v1/attendances`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    $("#AttendanceModal").modal("hide");
+                    showPopup("Attendance Added");
+                    location.reload();
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        }
+    });
+    $("#saveAttendanceChangesButton").click(function() {
+        $("#attendanceForm").submit();
+    });
+
+    $(".deleteButton").click(function() {
+        const attendanceId = $(this).attr("data-id");
+        $("#attendanceToDelete").val(attendanceId);
+        $("#deleteAttendanceConfirmationModal").modal("show");
+    });
+
+    $("#confirmAttendanceDeleteButton").click(function() {
+        const attendanceId = $("#attendanceToDelete").val();
+
+        fetch(`/api/v1/attendances/${attendanceId}`, {
+                method: "DELETE"
+            })
+            .then(response => {
+                if (response.ok) {
+                    $("#deleteAttendanceConfirmationModal").modal("hide");
+                    showPopup("Attendance Deleted");
+                    location.reload();
+                } else {
+                    console.error('Error:', response.statusText);
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    });
+      // Handler for Upload CSV file button
+      $("#uploadCsvFileButton").click(function() {
+        $("#uploadCsvFile").click();
+      });
+
+      $("#uploadCsvFile").change(function() {
+        var formData = new FormData();
+        formData.append('csv_file', $(this)[0].files[0]);
+
+        $.ajax({
+          url: '/attendances/csv_upload',
+          type: 'POST',
+          data: formData,
+          cache: false,
+          contentType: false,
+          processData: false,
+          success: function(response) {
+            showPopup("CSV Uploaded"); // Show the popup
+            location.reload();
+          },
+          error: function(response) {
+            console.log(response);
+          }
+        });
+      });
+    });
+</script>
+    <footer class="footer bg-dark navbar-dark">
+    <div class="container-xxl footer-terms">
+      <ul class="navbar-nav gap-md-3">
+        <li class="fw-bold">© Orange 2023</li>
+      </ul>
+    </div>
+  </footer> 
+</body>
+</html>

@@ -10,11 +10,15 @@ role_api_bp = Blueprint('role_api', __name__, url_prefix='/api/v1/roles')
 def create():
     data = request.get_json()
     new_role = Role(
-        role_name=data['RoleName']
+        role_name=data['RoleName'],
+        status=data.get('Status', None),
+        join_date=data.get('JoinDate', None),
+        leave_date=data.get('LeaveDate', None)
     )
     db.session.add(new_role)
     db.session.commit()
     return jsonify({'message': 'Role created'}), 201
+
 
 @role_api_bp.route('/', methods=['GET'])
 def index():
@@ -36,6 +40,9 @@ def update(id):
     if role:
         role.update({
             'role_name': data.get('RoleName'),
+            'status': data.get('Status', None),
+            'join_date': data.get('JoinDate', None),
+            'leave_date': data.get('LeaveDate', None)
         })
         db.session.commit()
         return jsonify({'message': 'Role updated'}), 200

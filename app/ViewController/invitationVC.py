@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect
+from flask import Blueprint, render_template, request, redirect, current_app
 import requests
 
 invitation_view_bp = Blueprint('invitation_view', __name__, url_prefix='/invitations')
@@ -10,15 +10,15 @@ def new():
 @invitation_view_bp.route('/', methods=['POST'])
 def create():
     data = request.form.to_dict()
-    response = requests.post('http://localhost:5000/api/v1/invitations', json=data)
+    api_url = f'{current_app.config["API_BASE_URL"]}/invitations'
+    response = requests.post(api_url, json=data)
     return redirect('/invitations')
 
 @invitation_view_bp.route('/', methods=['GET'])
 def index():
     page = request.args.get('page', 1, type=int)
-    per_page = 5  
-
-    api_url = f'http://localhost:5000/api/v1/invitations'
+    per_page = 5
+    api_url = f'{current_app.config["API_BASE_URL"]}/invitations'
     response = requests.get(api_url)
     invitations_data = response.json()
 
@@ -39,20 +39,24 @@ def index():
 
 @invitation_view_bp.route('/<int:id>', methods=['GET'])
 def show(id):
-    invitation = requests.get(f'http://localhost:5000/api/v1/invitations/{id}').json()
+    api_url = f'{current_app.config["API_BASE_URL"]}/invitations/{id}'
+    invitation = requests.get(api_url).json()
 
 @invitation_view_bp.route('/<int:id>/edit', methods=['GET'])
 def edit(id):
-    invitation = requests.get(f'http://localhost:5000/api/v1/invitations/{id}').json()
+    api_url = f'{current_app.config["API_BASE_URL"]}/invitations/{id}'
+    invitation = requests.get(api_url).json()
     return render_template('invitationsList.html', invitation=invitation)
 
 @invitation_view_bp.route('/<int:id>', methods=['POST'])
 def update(id):
     data = request.form.to_dict()
-    requests.put(f'http://localhost:5000/api/v1/invitations/{id}', json=data)
+    api_url = f'{current_app.config["API_BASE_URL"]}/invitations/{id}'
+    response = requests.put(api_url, json=data)
     return redirect('/invitations')
 
 @invitation_view_bp.route('/<int:id>', methods=['POST'])
 def delete(id):
-    requests.delete(f'http://localhost:5000/api/v1/invitations/{id}')
+    api_url = f'{current_app.config["API_BASE_URL"]}/invitations/{id}'
+    response = requests.delete(api_url)
     return redirect('/invitations')

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect
+from flask import Blueprint, render_template, request, redirect, current_app
 import requests
 
 meetingType_view_bp = Blueprint('meetingType_view', __name__, url_prefix='/meeting-types')
@@ -10,15 +10,15 @@ def new():
 @meetingType_view_bp.route('/', methods=['POST'])
 def create():
     data = request.form.to_dict()
-    response = requests.post('http://localhost:5000/api/v1/meeting-types', json=data)
+    api_url = f'{current_app.config["API_BASE_URL"]}/meeting-types'
+    response = requests.post(api_url, json=data)
     return redirect('/meeting-types')
 
 @meetingType_view_bp.route('/', methods=['GET'])
 def index():
     page = request.args.get('page', 1, type=int)
-    per_page = 5  
-
-    api_url = f'http://localhost:5000/api/v1/meeting-types'
+    per_page = 5
+    api_url = f'{current_app.config["API_BASE_URL"]}/meeting-types'
     response = requests.get(api_url)
     types_data = response.json()
 
@@ -39,21 +39,25 @@ def index():
 
 @meetingType_view_bp.route('/<int:id>', methods=['GET'])
 def show(id):
-    type = requests.get(f'http://localhost:5000/api/v1/meeting-types/{id}').json()
+    api_url = f'{current_app.config["API_BASE_URL"]}/meeting-types/{id}'
+    type = requests.get(api_url).json()
 
 
 @meetingType_view_bp.route('/<int:id>/edit', methods=['GET'])
 def edit(id):
-    type = requests.get(f'http://localhost:5000/api/v1/meeting-types/{id}').json()
+    api_url = f'{current_app.config["API_BASE_URL"]}/meeting-types/{id}'
+    type = requests.get(api_url).json()
     return render_template('meetingTypesList.html', type=type)
 
 @meetingType_view_bp.route('/<int:id>', methods=['POST'])
 def update(id):
     data = request.form.to_dict()
-    requests.put(f'http://localhost:5000/api/v1/meeting-types/{id}', json=data)
+    api_url = f'{current_app.config["API_BASE_URL"]}/meeting-types/{id}'
+    response = requests.put(api_url, json=data)
     return redirect('/meeting-types')
 
 @meetingType_view_bp.route('/<int:id>', methods=['POST'])
 def delete(id):
-    requests.delete(f'http://localhost:5000/api/v1/meeting-types/{id}')
+    api_url = f'{current_app.config["API_BASE_URL"]}/meeting-types/{id}'
+    response = requests.delete(api_url)
     return redirect('/meeting-types')

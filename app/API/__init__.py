@@ -3,3 +3,8 @@ from .meetingTypeBP import meetingType_api_bp
 from .personBP import person_api_bp
 from .roleBP import role_api_bp
 from .invitationBP import invitation_api_bp
+from .affiliationBP import affiliation_api_bp
+from .attendanceBP import attendance_api_bp
+from .countryBP import country_api_bp
+from .zoneBP import zone_api_bp
+from .chartsBP import charts_api_bp

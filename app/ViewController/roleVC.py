@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect
+from flask import Blueprint, render_template, request, redirect, current_app
 import requests
 
 role_view_bp = Blueprint('role_view', __name__, url_prefix='/roles')
@@ -10,15 +10,15 @@ def new():
 @role_view_bp.route('/', methods=['POST'])
 def create():
     data = request.form.to_dict()
-    response = requests.post('http://localhost:5000/api/v1/roles', json=data)
+    api_url = f'{current_app.config["API_BASE_URL"]}/roles'
+    response = requests.post(api_url, json=data)
     return redirect('/roles')
 
 @role_view_bp.route('/', methods=['GET'])
 def index():
     page = request.args.get('page', 1, type=int)
-    per_page = 5  
-
-    api_url = f'http://localhost:5000/api/v1/roles'
+    per_page = 5
+    api_url = f'{current_app.config["API_BASE_URL"]}/roles'
     response = requests.get(api_url)
     roles_data = response.json()
 
@@ -39,20 +39,24 @@ def index():
 
 @role_view_bp.route('/<int:id>', methods=['GET'])
 def show(id):
-    role = requests.get(f'http://localhost:5000/api/v1/roles/{id}').json()
+    api_url = f'{current_app.config["API_BASE_URL"]}/roles/{id}'
+    role = requests.get(api_url).json()
 
 @role_view_bp.route('/<int:id>/edit', methods=['GET'])
 def edit(id):
-    role = requests.get(f'http://localhost:5000/api/v1/roles/{id}').json()
+    api_url = f'{current_app.config["API_BASE_URL"]}/roles/{id}'
+    role = requests.get(api_url).json()
     return render_template('rolesList.html', role=role)
 
 @role_view_bp.route('/<int:id>', methods=['POST'])
 def update(id):
     data = request.form.to_dict()
-    requests.put(f'http://localhost:5000/api/v1/roles/{id}', json=data)
+    api_url = f'{current_app.config["API_BASE_URL"]}/roles/{id}'
+    response = requests.put(api_url, json=data)
     return redirect('/roles')
 
 @role_view_bp.route('/<int:id>', methods=['POST'])
 def delete(id):
-    requests.delete(f'http://localhost:5000/api/v1/roles/{id}')
+    api_url = f'{current_app.config["API_BASE_URL"]}/roles/{id}'
+    response = requests.delete(api_url)
     return redirect('/roles')

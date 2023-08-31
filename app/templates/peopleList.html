@@ -24,6 +24,11 @@
       background-color: #fff; 
       padding: 20px; 
     }
+    .error-message {
+    font-size: 16px;
+    margin-top: 5px;
+    }  
+    
   </style>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
@@ -61,23 +66,49 @@
                       <li><a class="dropdown-item" id="dropdownInvitation" data-label="Invitation" href="/invitations">Invitations</a></li>
                   </ul>
               </li>
-          </ul>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" id="navbarDropdownButton2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Affiliations
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdownButton2">
+                    <li><a class="dropdown-item" id="dropdownAffiliation" data-label="Affiliation" href="/affiliations">Affiliations</a></li>
+                    <li><a class="dropdown-item" id="dropdownAttendance" data-label="Attendance" href="/attendances">Attendance</a></li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/charts">Charts</a>
+            </li>
+        </ul>
       </div>    
       </div>
+      <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-body text-center" id="successModalMessage">
+            </div>
+          </div>
+        </div>
+      </div>  
     </nav>
   <div class="container my-4">
     <div class="d-flex justify-content-between align-items-center"> 
         <h2 class="boosted-orange">People</h2>
-        <button id="addNewPersonButton" class="btn btn-secondary">Add New Person</button> 
+        <div class="d-flex">
+         <button id="addNewPersonButton" class="btn btn-secondary">Add New Person</button> 
+         <input type="file" id="uploadCsvFile" accept="text/csv" style="display: none;" />
+         <button id="uploadCsvFileButton" class="btn btn-secondary ml-2">Upload CSV File</button> 
+      </div>
     </div>
     <table class="table w-100">
-      <caption class="visually-hidden">People</caption>
+        <caption class="visually-hidden">People</caption>
       <thead>
         <tr>
           <th scope="col">First Name</th>
           <th scope="col">Last Name</th>
           <th scope="col">Email</th>
           <th scope="col">Phone</th>
+          <th scope="col">Affiliation</th>
+          <th scope="col">Country </th>
           <th scope="col">Address</th>
           <th scope="col">Manager ID</th>
           <th scope="col" class="d-flex justify-content-end">Actions</th>
@@ -86,38 +117,55 @@
       <tbody>
         {% for person in persons %}
         <tr>
-          <td>{{ person.first_name }}</td>
-          <td>{{ person.last_name }}</td>
-          <td>{{ person.email }}</td>
-          <td>{{ person.phone }}</td>
+          <td>{{ person.first_name  }}</td>
+          <td>{{ person.last_name  }}</td>
+          <td>{{ person.email  }}</td>
+          <td>{{ person.phone  }}</td>
+          <td>{{ person.affiliation_name }}</td>
+          <td>{{ person.country_alpha3_code  }}</td>
           <td>{{ person.address }}</td>
-          <td>{{ person.manager_id }}</td>
+          <td>{{ person.manager_id  }}</td>
           <td class="d-flex justify-content-end">
-            <a href="#" class="btn btn-primary editButton" data-id="{{ person.id }}">Edit</a>
-            <a href="#" class="btn btn-danger deleteButton" data-id="{{ person.id }}">Delete</a>
+            <a href="#" class="btn btn-primary editButton" data-id="{{ person.person_id }}">Edit</a>
+            <a href="#" class="btn btn-danger deleteButton" data-id="{{ person.person_id }}">Delete</a>
           </td>
         </tr>
         {% endfor %}
-      </tbody>
+        </tbody>
     </table>    
   </div>
   <nav aria-label="Page navigation" class="sticky-pagination">
     <ul class="pagination justify-content-end">
-        {% if pagination.has_prev %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('person_view.index', page=pagination.prev_num) }}">Previous</a></li>
-        {% endif %}
-
-        {% for page_num in range(1, pagination.total_pages + 1) %}
-        <li class="page-item {% if page_num == pagination.current_page %}active{% endif %}">
-          <a class="page-link" href="{{ url_for('person_view.index', page=page_num) }}">{{ page_num }}</a>
-        </li>
-        {% endfor %}
-
-        {% if pagination.has_next %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('person_view.index', page=pagination.next_num) }}">Next</a></li>
-        {% endif %}
-      </ul>
-    </nav>
+  
+      {% if pagination.has_prev %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('person_view.index', page=pagination.prev_num) }}">Previous</a></li>
+      {% endif %}
+  
+      {% set start_page = [pagination.current_page - 3, 1] | max %}
+      {% set end_page = [pagination.current_page + 3, pagination.total_pages] | min %}
+  
+      {% if start_page > 1 %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('person_view.index', page=1) }}">1</a></li>
+      <li class="page-item disabled"><span class="page-link">...</span></li>
+      {% endif %}
+  
+      {% for page_num in range(start_page, end_page + 1) %}
+      <li class="page-item {% if page_num == pagination.current_page %}active{% endif %}">
+        <a class="page-link" href="{{ url_for('person_view.index', page=page_num) }}">{{ page_num }}</a>
+      </li>
+      {% endfor %}
+  
+      {% if end_page < pagination.total_pages %}
+      <li class="page-item disabled"><span class="page-link">...</span></li>
+      <li class="page-item"><a class="page-link" href="{{ url_for('person_view.index', page=pagination.total_pages) }}">{{ pagination.total_pages }}</a></li>
+      {% endif %}
+  
+      {% if pagination.has_next %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('person_view.index', page=pagination.next_num) }}">Next</a></li>
+      {% endif %}
+  
+    </ul>
+  </nav>
     <div class="modal fade" id="PersonModal" tabindex="-1" role="dialog" aria-labelledby="PersonModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -142,10 +190,18 @@
                         </div>
                         <div class="form-group">
                             <label for="Phone">Phone: <span class="text-danger">*</span></label>
-                            <input type="text" name="Phone" id="Phone" class="form-control">
+                            <input type="text" name="Phone" id="Phone" class="form-control" required>
                         </div>
                         <div class="form-group">
-                            <label for="Address">Address: <span class="text-danger">*</span></label>
+                          <label for="Affiliation">Affiliation:</label>
+                          <select name="AffiliationID" id="AffiliationID" class="form-control"></select>
+
+                      <div class="form-group">
+                          <label for="Country">Country:</label>
+                          <select name="Country" id="CountryID" class="form-control"></select>
+                      </div>                                           
+                      <div class="form-group">
+                            <label for="Address">Address: <span class="text-danger"></span></label>
                             <input type="text" name="Address" id="Address" class="form-control">
                         </div>
                         <div class="form-group">
@@ -179,150 +235,238 @@
             </div>
         </div>
     </div>  
-<script>
-  $(document).ready(function(){
-  let mode = ''; // This will switch between 'create' and 'edit'
+    <script>
+      $(document).ready(function(){
 
-  // Save changes button click event
-  $("#saveChangesButton").click(function(){
-    $("#personForm").trigger('submit');
- });
-
-  // Button click handler for edit
-  $(".editButton").click(function(){
-    mode = 'edit';
-
-    const personId = $(this).attr("data-id");
-
-    // Fetch the person details from your API
-    $.get("/api/v1/persons/" + personId, function(data) {
-      $("#personID").val(data.id);
-      $("#FirstName").val(data.firstName);
-      $("#LastName").val(data.lastName);
-      $("#Email").val(data.email);
-      $("#Phone").val(data.phone);
-      $("#Address").val(data.address);
-      $("#ManagerID").val(data.managerId);
-
-      // Change the modal title and button text for editing
-      $("#PersonModalLabel").text('Edit Person');
-      $("#saveChangesButton").text('Save Changes');
-
-      // Show the modal
-      $("#PersonModal").modal("show");
+        let mode = ''; // This will switch between 'create' and 'edit'
+    
+// Fetch affiliations and populate the dropdown
+function fetchAffiliations() {
+    // Using the full_path parameter to get the full path for affiliations
+    $.get("/api/v1/affiliations?full_path=true", function(response) {
+        const affiliations = response.items; // Extract items from the response
+        const affiliationSelect = $("#AffiliationID");
+        affiliations.forEach(affiliation => {
+            affiliationSelect.append($('<option>', {
+                value: affiliation.affiliation_id,  // Use the ID as the value
+                text: affiliation.full_path || affiliation.affiliation_name  // Use the full path if available, fallback to the name
+            }));
+        });
     });
-  });
+}
 
-  // Button click handler for create
-  $("#addNewPersonButton").click(function(){
-    mode = 'create';
+// Fetch countries and populate the dropdown
+function fetchCountries() {
+    $.get("/api/v1/countries", function(response) {
+        const countries = response.items; // Extract items from the response
+        const countrySelect = $("#CountryID");
+        countries.forEach(country => {
+            countrySelect.append($('<option>', {
+                value: country.id,
+                text: country.alpha3_code
+            }));
+        });
+    });
+}
+    
+        // Run the fetch functions immediately on page load to populate dropdowns
+        fetchAffiliations();
+        fetchCountries();
+    
+        function validateForm() {
+            let isValid = true;
+            $("#personForm input[required]").each(function() {
+                const parentDiv = $(this).closest('.form-group');
+                if ($(this).val().trim() === "") {
+                    $(this).css("border", "1px solid red");
+                    if (!parentDiv.find('.error-message').length) {
+                        parentDiv.append('<div class="error-message text-danger">Field required</div>');
+                    }
+                    isValid = false;
+                } else {
+                    $(this).css("border", "");
+                    parentDiv.find('.error-message').remove();
+                }
+            });
+            return isValid;
+        }
+    
+        $("#saveChangesButton").click(function() {
+            if (validateForm()) {
+                $("#personForm").trigger('submit');
+            }
+        });
+    
+        function showPopup(message) {
+            $("#successModalMessage").text(message);
+            $("#successModal").modal("show");
+            setTimeout(function() {
+                $("#successModal").modal("hide");
+            }, 4000);
+        }
+    
+        $(".editButton").click(function(){
+            mode = 'edit';
+            const personId = $(this).attr("data-id");
 
-    // Clear the form fields
-    $("#personID").val('');
-    $("#FirstName").val('');
-    $("#LastName").val('');
-    $("#Email").val('');
-    $("#Phone").val('');
-    $("#Address").val('');
-    $("#ManagerID").val('');
-
-    // Change the modal title and button text for adding new
-    $("#PersonModalLabel").text('Add New Person');
-    $("#saveChangesButton").text('Create Person');
-
-    // Show the modal
-    $("#PersonModal").modal("show");
-  });
-
-  $("#personForm").on("submit", function(e) {
-    e.preventDefault();  // Prevent the default form submission
-
-    // Create data object from form inputs
+            $.get("/api/v1/persons/" + personId, function(data) {
+                console.log("Fetched person data:", data);
+                $("#personID").val(data.person_id);
+                $("#FirstName").val(data.first_name);
+                $("#LastName").val(data.last_name);
+                $("#Email").val(data.email);
+                $("#Phone").val(data.phone);
+                $("#AffiliationID").val(data.affiliation_id);
+                $("#CountryID").val(data.country_id);
+                $("#Address").val(data.address);
+                $("#ManagerID").val(data.manager_id);
+                $("#PersonModalLabel").text('Edit Person');
+                $("#saveChangesButton").text('Save Changes');
+                $("#PersonModal").modal("show");
+                
+            });
+        });
+    
+        $("#addNewPersonButton").click(function(){
+            mode = 'create';
+            $("#personID").val('');
+            $("#FirstName").val('');
+            $("#LastName").val('');
+            $("#Email").val('');
+            $("#Phone").val('');
+            $("#AffiliationID").val('');
+            $("#CountryID").val('');
+            $("#Address").val('');
+            $("#ManagerID").val('');
+            $("#PersonModalLabel").text('Add New Person');
+            $("#saveChangesButton").text('Create Person');
+            $("#PersonModal").modal("show");
+        });
+    
+        $("#PersonModal").on('hidden.bs.modal', function() {
+            if (mode === 'create') {
+                $("#personID").val('');
+                $("#FirstName").val('');
+                $("#LastName").val('');
+                $("#Email").val('');
+                $("#Phone").val('');
+                $("#AffiliationID").val('');
+                $("#CountryID").val('');
+                $("#Address").val('');
+                $("#ManagerID").val('');
+                $("#personForm input").css("border", "");
+                $(".error-message").remove();
+                $("#PersonModalLabel").text('Add New Person');
+                $("#saveChangesButton").text('Create Person');
+            }
+        });
+    
+        $("#personForm").on("submit", function(e) {
+    e.preventDefault();
     let data = {
-      "FirstName": $("#FirstName").val(),
-      "LastName": $("#LastName").val(),
-      "Email": $("#Email").val(),
-      "Phone": $("#Phone").val(),
-      "Address": $("#Address").val(),
-      "ManagerID": $("#ManagerID").val() === "" ? null : $("#ManagerID").val()
+        "FirstName": $("#FirstName").val(),
+        "LastName": $("#LastName").val(),
+        "Email": $("#Email").val(),
+        "Phone": $("#Phone").val(),
+        "AffiliationID": $("#AffiliationID").val(),
+        "CountryID": $("#CountryID").val(),
+        "Address": $("#Address").val(),
+        "ManagerID": $("#ManagerID").val() === "" ? null : $("#ManagerID").val()
     };
-
     if (mode === 'edit') {
-      // Use Fetch API to send a PUT request to the correct URL
-      const personId = $("#personID").val();
-      fetch(`/api/v1/persons/${personId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-      })
-      .then(response => response.json())
-      .then(data => {
-        // Close the modal and reload the page to update the view
-        $("#PersonModal").modal("hide");
-        location.reload();
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-    }
-    else if (mode === 'create') {
-      // Use Fetch API to send a POST request to the correct URL
-      fetch(`/api/v1/persons`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-      })
-      .then(response => response.json())
-      .then(data => {
-        // Close the modal and reload the page to update the view
-        $("#PersonModal").modal("hide");
-        location.reload();
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-    }
-  });
-
-  // Button click handler for delete
-  $(".deleteButton").click(function(){
-      const personId = $(this).attr("data-id");
-
-      // Store the person id to the hidden field
-      $("#personToDelete").val(personId);
-
-      // Show the delete confirmation modal
-      $("#deletePersonConfirmationModal").modal("show");
-  });
-
-  // Button click handler for confirm delete in the modal
-  $("#confirmPersonDeleteButton").click(function(){
-      const personId = $("#personToDelete").val();
-      
-      // Send a DELETE request to your API
-      fetch(`/api/v1/persons/${personId}`, {
-            method: "DELETE"
+        const personId = $("#personID").val();
+        fetch(`/api/v1/persons/${personId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
         })
-      .then(response => {
-      if (response.ok) {
-        // Close the modal and reload the page to update the view
-        $("#deletePersonConfirmationModal").modal("hide");
-        location.reload();
-      } else {
-        // Handle any errors here
-        console.error('Error:', response.statusText);
-       }
-     })
-      .catch((error) => {
-          console.error('Error:', error);
-       });
-     });
+        .then(response => response.json())
+        .then(data => {
+            $("#PersonModal").modal("hide");
+            showPopup("Person edited");
+            location.reload();
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    } else if (mode === 'create') {
+        fetch(`/api/v1/persons`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            $("#PersonModal").modal("hide");
+            showPopup("Person Created");
+            location.reload();
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    }
 });
-</script>                           
+
+        $("#savePersonChangesButton").click(function() {
+        $("#personForm").submit();
+    });
+
+    
+    
+        $(".deleteButton").click(function(){
+            const personId = $(this).attr("data-id");
+            $("#personToDelete").val(personId);
+            $("#deletePersonConfirmationModal").modal("show");
+        });
+    
+        $("#confirmPersonDeleteButton").click(function(){
+            const personId = $("#personToDelete").val();
+            fetch(`/api/v1/persons/${personId}`, {
+                method: "DELETE"
+            })
+            .then(response => {
+                if (response.ok) {
+                    $("#deletePersonConfirmationModal").modal("hide");
+                    showPopup("Person Deleted");
+                    location.reload();
+                } else {
+                    console.error('Error:', response.statusText);
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        });
+
+        $("#uploadCsvFileButton").click(function() {
+            $("#uploadCsvFile").click();
+        });
+    
+        $("#uploadCsvFile").change(function() {
+            var formData = new FormData();
+            formData.append('csv_file', $(this)[0].files[0]);
+            $.ajax({
+                url: '/persons/csv_upload',
+                type: 'POST',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    showPopup("CSV Uploaded");
+                    location.reload();
+                },
+                error: function(response) {
+                    console.error('Error:', response.statusText);
+                }
+            });
+        });
+    });
+  </script>                           
 <footer class="footer bg-dark navbar-dark">
     <div class="container-xxl footer-terms">
       <ul class="navbar-nav gap-md-3">

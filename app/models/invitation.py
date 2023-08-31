@@ -46,5 +46,3 @@ class Invitation(db.Model):
         self.person_id = data.get('person_id', self.person_id)
         self.role_id = data.get('role_id', self.role_id)
         self.status = data.get('status', self.status)
-
-

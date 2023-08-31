@@ -13,7 +13,14 @@ class Meeting(db.Model):
     location = db.Column('Location', db.String(256))
     title = db.Column('Title', db.String(256))  
 
+
     meetingtype = db.relationship('MeetingType', backref='meetings')
+    time_start = db.relationship('Time', 
+                                 primaryjoin="foreign(Meeting.start_date) == Time.date", 
+                                 backref='meeting_starts')
+    time_end = db.relationship('Time', 
+                               primaryjoin="foreign(Meeting.end_date) == Time.date", 
+                               backref='meeting_ends')
     
 
     def __init__(self, type_id, start_date, start_time, end_date, end_time, location, title):  
@@ -23,11 +30,16 @@ class Meeting(db.Model):
         self.end_date = end_date
         self.end_time = end_time
         self.location = location
-        self.title = title  
+        self.title = title
 
     @classmethod
     def get_by_id(cls, id):
         return cls.query.filter_by(id=id).first()
+    
+    @classmethod
+    def get_by_title(cls, title):
+       return cls.query.filter_by(title=title).first()
+
     
     @classmethod
     def delete(cls, id):
@@ -48,7 +60,7 @@ class Meeting(db.Model):
             'end_date': self.end_date.isoformat(),
             'end_time': self.end_time.strftime('%I:%M %p') if self.end_time else None,
             'location': self.location,
-            'title': self.title  
+            'title': self.title,
         }
 
     def update(self, data):
@@ -58,4 +70,5 @@ class Meeting(db.Model):
         self.end_date = data.get('end_date', self.end_date)
         self.end_time = data.get('end_time', self.end_time)
         self.location = data.get('location', self.location)
-        self.title = data.get('title', self.title)  
+        self.title = data.get('title', self.title)
+

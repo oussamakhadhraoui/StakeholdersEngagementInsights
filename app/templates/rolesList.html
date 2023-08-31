@@ -61,9 +61,29 @@
                       <li><a class="dropdown-item" id="dropdownInvitation" data-label="Invitation" href="/invitations">Invitations</a></li>
                   </ul>
               </li>
-          </ul>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" id="navbarDropdownButton2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Affiliations
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdownButton2">
+                    <li><a class="dropdown-item" id="dropdownAffiliation" data-label="Affiliation" href="/affiliations">Affiliations</a></li>
+                    <li><a class="dropdown-item" id="dropdownAttendance" data-label="Attendance" href="/attendances">Attendance</a></li>
+                </ul>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/charts">Charts</a>
+          </li>
+        </ul>
       </div>    
       </div>
+      <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-body text-center" id="successModalMessage">
+            </div>
+          </div>
+        </div>
+      </div>  
     </nav>
   <div class="container my-4">
     <div class="d-flex justify-content-between align-items-center"> 
@@ -73,43 +93,64 @@
     <table class="table w-100">
       <caption class="visually-hidden">Roles</caption>
       <thead>
-        <tr>
-          <th scope="col">ID Name</th>
-          <th scope="col">Role Name</th>
-          <th scope="col" class="d-flex justify-content-end">Actions</th>
-        </tr>
+          <tr>
+              <th scope="col">ID </th>
+              <th scope="col">Role Name</th>
+              <th scope="col">Status</th>
+              <th scope="col">Join Date</th>
+              <th scope="col">Leave Date</th>
+              <th scope="col" class="d-flex justify-content-end">Actions</th>
+          </tr>
       </thead>
       <tbody>
-        {% for role in roles %}
-        <tr>
-          <td>{{ role.id }}</td>
-          <td>{{ role.role_name }}</td>
-          <td class="d-flex justify-content-end">
-            <a href="#" class="btn btn-primary editButton" data-id="{{ role.id }}">Edit</a>
-            <a href="#" class="btn btn-danger deleteButton" data-id="{{ role.id }}">Delete</a>
-          </td>
-        </tr>
-        {% endfor %}
+          {% for role in roles %}
+          <tr>
+              <td>{{ role.id }}</td>
+              <td>{{ role.role_name }}</td>
+              <td>{{ role.status }}</td>
+              <td>{{ role.join_date }}</td>
+              <td>{{ role.leave_date }}</td>
+              <td class="d-flex justify-content-end">
+                  <a href="#" class="btn btn-primary editButton" data-id="{{ role.id }}">Edit</a>
+                  <a href="#" class="btn btn-danger deleteButton" data-id="{{ role.id }}">Delete</a>
+              </td>
+          </tr>
+          {% endfor %}
       </tbody>
-    </table>    
+  </table>    
   </div>
   <nav aria-label="Page navigation" class="sticky-pagination">
     <ul class="pagination justify-content-end">
-        {% if pagination.has_prev %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('role_view.index', page=pagination.prev_num) }}">Previous</a></li>
-        {% endif %}
-
-        {% for page_num in range(1, pagination.total_pages + 1) %}
-        <li class="page-item {% if page_num == pagination.current_page %}active{% endif %}">
-          <a class="page-link" href="{{ url_for('role_view.index', page=page_num) }}">{{ page_num }}</a>
-        </li>
-        {% endfor %}
-
-        {% if pagination.has_next %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('role_view.index', page=pagination.next_num) }}">Next</a></li>
-        {% endif %}
-      </ul>
-    </nav>
+  
+      {% if pagination.has_prev %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('role_view.index', page=pagination.prev_num) }}">Previous</a></li>
+      {% endif %}
+  
+      {% set start_page = [pagination.current_page - 3, 1] | max %}
+      {% set end_page = [pagination.current_page + 3, pagination.total_pages] | min %}
+  
+      {% if start_page > 1 %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('role_view.index', page=1) }}">1</a></li>
+      <li class="page-item disabled"><span class="page-link">...</span></li>
+      {% endif %}
+  
+      {% for page_num in range(start_page, end_page + 1) %}
+      <li class="page-item {% if page_num == pagination.current_page %}active{% endif %}">
+        <a class="page-link" href="{{ url_for('role_view.index', page=page_num) }}">{{ page_num }}</a>
+      </li>
+      {% endfor %}
+  
+      {% if end_page < pagination.total_pages %}
+      <li class="page-item disabled"><span class="page-link">...</span></li>
+      <li class="page-item"><a class="page-link" href="{{ url_for('role_view.index', page=pagination.total_pages) }}">{{ pagination.total_pages }}</a></li>
+      {% endif %}
+  
+      {% if pagination.has_next %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('role_view.index', page=pagination.next_num) }}">Next</a></li>
+      {% endif %}
+  
+    </ul>
+  </nav>
     <div class="modal fade" id="RoleModal" tabindex="-1" role="dialog" aria-labelledby="RoleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -124,6 +165,20 @@
                             <label for="RoleName">Role Name: <span class="text-danger">*</span></label>
                             <input type="text" name="RoleName" id="RoleName" class="form-control" required>
                         </div>
+                        <div class="form-group mt-2">
+                          <label for="Status">Status:</label>
+                          <input type="text" name="Status" id="Status" class="form-control">
+                      </div>
+              
+                      <div class="form-group mt-2">
+                          <label for="JoinDate">Join Date:</label>
+                          <input type="date" name="JoinDate" id="JoinDate" class="form-control">
+                      </div>
+              
+                      <div class="form-group mt-2">
+                          <label for="LeaveDate">Leave Date:</label>
+                          <input type="date" name="LeaveDate" id="LeaveDate" class="form-control">
+                      </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -152,134 +207,211 @@
         </div>
     </div> 
     <script>
-        $(document).ready(function(){
-          let mode = ''; // This will switch between 'create' and 'edit'
-        
-          // Save changes button click event
-          $("#saveChangesButton").click(function(){
+      $(document).ready(function() {
+        let mode = ''; // This will switch between 'create' and 'edit'
+    
+        function validateForm() {
+          let isValid = true;
+    
+          // Check all required fields
+          $("#roleForm input[required]").each(function() {
+            const parentDiv = $(this).closest('.form-group');
+    
+            if ($(this).val().trim() === "") {
+              $(this).css("border", "1px solid red");
+              if (!parentDiv.find('.error-message').length) {
+                // Append an error message if it doesn't already exist
+                parentDiv.append('<div class="error-message text-danger">Field required</div>');
+              }
+              isValid = false;
+            } else {
+              $(this).css("border", "");
+              parentDiv.find('.error-message').remove(); // Remove the error message
+            }
+          });
+          // Date validation
+    const joinDate = new Date($("#JoinDate").val());
+    const leaveDate = new Date($("#LeaveDate").val());
+
+    if (leaveDate && joinDate && leaveDate < joinDate) {
+        $("#LeaveDate").css("border", "1px solid red");
+        isValid = false;
+        alert("Leave Date cannot be before Join Date.");
+    }
+    
+          return isValid;
+        }
+    
+        // Save changes button click event
+        $("#saveChangesButton").click(function() {
+          if (validateForm()) { // Validate the form before submitting
             $("#roleForm").trigger('submit');
+          }
+        });
+        function showPopup(message) {
+  // Set the message in the modal
+  $("#successModalMessage").text(message);
+
+  // Show the modal
+  $("#successModal").modal("show");
+
+  // Hide the modal after 3 seconds (3000 milliseconds)
+  setTimeout(function() {
+    $("#successModal").modal("hide");
+  }, 4000);
+}
+    
+        // Button click handler for edit
+        $(".editButton").click(function() {
+          mode = 'edit';
+    
+          const roleId = $(this).attr("data-id");
+    
+          // Fetch the role details from your API
+          $.get("/api/v1/roles/" + roleId, function(data) {
+            $("#roleID").val(data.id);
+            $("#RoleName").val(data.role_name);
+            $("#Status").val(data.status);
+            $("#JoinDate").val(data.join_date);
+            $("#LeaveDate").val(data.leave_date);
+    
+            // Change the modal title and button text for editing
+            $("#RoleModalLabel").text('Edit Role');
+            $("#saveChangesButton").text('Save Changes');
+    
+            // Show the modal
+            $("#RoleModal").modal("show");
           });
-        
-          // Button click handler for edit
-          $(".editButton").click(function(){
-            mode = 'edit';
-        
-            const roleId = $(this).attr("data-id");
-        
-            // Fetch the role details from your API
-            $.get("/api/v1/roles/" + roleId, function(data) {
-              $("#roleID").val(data.id);
-              $("#RoleName").val(data.name);
-        
-              // Change the modal title and button text for editing
-              $("#RoleModalLabel").text('Edit Role');
-              $("#saveChangesButton").text('Save Changes');
-        
-              // Show the modal
-              $("#RoleModal").modal("show");
-            });
-          });
-        
-          // Button click handler for create
-          $("#addNewRoleButton").click(function(){
-            mode = 'create';
-        
+        });
+    
+        // Button click handler for create
+        $("#addNewRoleButton").click(function() {
+          mode = 'create';
+    
+          // Clear the form fields
+          $("#roleID").val('');
+          $("#RoleName").val('');
+          $("#Status").val('');
+          $("#JoinDate").val('');
+          $("#LeaveDate").val('');
+    
+          // Change the modal title and button text for adding new
+          $("#RoleModalLabel").text('Add New Role');
+          $("#saveChangesButton").text('Create Role');
+    
+          // Show the modal
+          $("#RoleModal").modal("show");
+        });
+    
+        // Event handler for when the role modal is closed
+        $("#RoleModal").on('hidden.bs.modal', function() {
+          if (mode === 'create') {
             // Clear the form fields
             $("#roleID").val('');
             $("#RoleName").val('');
-        
-            // Change the modal title and button text for adding new
+            $("#Status").val('');
+            $("#JoinDate").val('');
+            $("#LeaveDate").val('');
+    
+            // Remove any validation messages
+            $("#roleForm input").css("border", "");
+            $(".error-message").remove();
+    
+            // Change the modal title and button text back to 'Create'
             $("#RoleModalLabel").text('Add New Role');
             $("#saveChangesButton").text('Create Role');
-        
-            // Show the modal
-            $("#RoleModal").modal("show");
-           });
-        
-        $("#roleForm").on("submit", function(e) {
-            e.preventDefault();  // Prevent the default form submission
-        
-            // Create data object from form inputs
-            let data = {
-              "RoleName": $("#RoleName").val()
-            };
-
-            if (mode === 'edit') {
-              // Use Fetch API to send a PUT request to the correct URL
-              const roleId = $("#roleID").val();
-              fetch(`/api/v1/roles/${roleId}`, {
-                method: "PUT",
-                headers: {
-                  "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data)
-              })
-              .then(response => response.json())
-              .then(data => {
-                // Close the modal and reload the page to update the view
-                $("#RoleModal").modal("hide");
-                location.reload();
-              })
-              .catch((error) => {
-                console.error('Error:', error);
-              });
-            }
-            else if (mode === 'create') {
-              // Use Fetch API to send a POST request to the correct URL
-              fetch(`/api/v1/roles`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data)
-              })
-              .then(response => response.json())
-              .then(data => {
-                // Close the modal and reload the page to update the view
-                $("#RoleModal").modal("hide");
-                location.reload();
-              })
-              .catch((error) => {
-                console.error('Error:', error);
-              });
-            }
-          });
-        
-          // Button click handler for delete
-          $(".deleteButton").click(function(){
-              const roleId = $(this).attr("data-id");
-        
-              // Store the role id to the hidden field
-              $("#roleToDelete").val(roleId);
-        
-              // Show the delete confirmation modal
-              $("#deleteRoleConfirmationModal").modal("show");
-          });
-        
-          // Button click handler for confirm delete in the modal
-          $("#confirmRoleDeleteButton").click(function(){
-              const roleId = $("#roleToDelete").val();
-              
-              // Send a DELETE request to your API
-              fetch(`/api/v1/roles/${roleId}`, {
-                    method: "DELETE"
-                })
-              .then(response => {
-              if (response.ok) {
-                // Close the modal and reload the page to update the view
-                $("#deleteRoleConfirmationModal").modal("hide");
-                location.reload();
-              } else {
-                // Handle any errors here
-                console.error('Error:', response.statusText);
-               }
-             })
-              .catch((error) => {
-                  console.error('Error:', error);
-               });
-             });
+          }
         });
-        </script>                           
+    
+        $("#roleForm").on("submit", function(e) {
+          e.preventDefault(); // Prevent the default form submission
+    
+          // Create data object from form inputs
+          let data = {
+            "RoleName": $("#RoleName").val(),
+            "Status": $("#Status").val() || null,
+            "JoinDate": $("#JoinDate").val()|| null,
+            "LeaveDate": $("#LeaveDate").val()|| null
+          };
+    
+          if (mode === 'edit') {
+            // Use Fetch API to send a PUT request to the correct URL
+            const roleId = $("#roleID").val();
+            fetch(`/api/v1/roles/${roleId}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+              // Close the modal and reload the page to update the view
+              $("#RoleModal").modal("hide");
+              showPopup("Role Edited"); // Show the popup
+              location.reload();
+            })
+            .catch((error) => {
+              console.error('Error:', error);
+            });
+          } else if (mode === 'create') {
+            // Use Fetch API to send a POST request to the correct URL
+            fetch(`/api/v1/roles`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+              // Close the modal and reload the page to update the view
+              $("#RoleModal").modal("hide");
+              showPopup("Role Created"); // Show the popup
+              location.reload();
+            })
+            .catch((error) => {
+              console.error('Error:', error);
+            });
+          }
+        });
+    
+        // Button click handler for delete
+        $(".deleteButton").click(function() {
+          const roleId = $(this).attr("data-id");
+    
+          // Store the role id to the hidden field
+          $("#roleToDelete").val(roleId);
+    
+          // Show the delete confirmation modal
+          $("#deleteRoleConfirmationModal").modal("show");
+        });
+    
+        // Button click handler for confirm delete in the modal
+        $("#confirmRoleDeleteButton").click(function() {
+          const roleId = $("#roleToDelete").val();
+    
+          // Send a DELETE request to your API
+          fetch(`/api/v1/roles/${roleId}`, {
+            method: "DELETE"
+          })
+          .then(response => {
+            if (response.ok) {
+              // Close the modal and reload the page to update the view
+              $("#deleteRoleConfirmationModal").modal("hide");
+              showPopup("Role Deleted"); // Show the popup
+              location.reload();
+            } else {
+              // Handle any errors here
+              console.error('Error:', response.statusText);
+            }
+          })
+          .catch((error) => {
+            console.error('Error:', error);
+          });
+        });
+      });
+    </script>                  
     <footer class="footer bg-dark navbar-dark">
      <div class="container-xxl footer-terms">
       <ul class="navbar-nav gap-md-3">

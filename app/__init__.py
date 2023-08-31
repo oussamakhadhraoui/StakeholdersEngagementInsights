@@ -14,12 +14,21 @@ from app.API.meetingTypeBP import meetingType_api_bp
 from app.API.personBP import person_api_bp
 from app.API.roleBP import role_api_bp
 from app.API.invitationBP import invitation_api_bp
+from app.API.zoneBP import zone_api_bp
+from app.API.affiliationBP import affiliation_api_bp
+from app.API.attendanceBP import attendance_api_bp
+from app.API.countryBP import country_api_bp
+from app.API.chartsBP import charts_api_bp
 
 from app.ViewController.meetingVC import meeting_view_bp
 from app.ViewController.meetingTypeVC import meetingType_view_bp
 from app.ViewController.personVC import person_view_bp
 from app.ViewController.roleVC import role_view_bp
 from app.ViewController.invitationVC import invitation_view_bp
+from app.ViewController.affiliationVC import affiliation_view_bp
+from app.ViewController.attendanceVC import attendance_view_bp
+from app.ViewController.chartsVC import charts_view_bp
+
 
 '''from flask_swagger_ui import get_swaggerui_blueprint'''
 
@@ -56,6 +65,11 @@ def create_app():
     app.register_blueprint(person_api_bp, url_prefix='/api/v1/persons')
     app.register_blueprint(role_api_bp, url_prefix='/api//v1/roles')
     app.register_blueprint(invitation_api_bp, url_prefix='/api/v1/invitations')
+    app.register_blueprint(zone_api_bp, url_prefix='/api/v1/zones')
+    app.register_blueprint(affiliation_api_bp, url_prefix='/api/v1/affiliations')
+    app.register_blueprint(attendance_api_bp, url_prefix='/api/v1/attendances')
+    app.register_blueprint(country_api_bp, url_prefix='/api/v1/countries')
+    app.register_blueprint(charts_api_bp, url_prefix='/api/v1/charts')
 
 
     'View BP'
@@ -64,6 +78,9 @@ def create_app():
     app.register_blueprint(person_view_bp, url_prefix='/persons')
     app.register_blueprint(role_view_bp, url_prefix='/roles')
     app.register_blueprint(invitation_view_bp, url_prefix='/invitations')
+    app.register_blueprint(affiliation_view_bp, url_prefix='/affiliations')
+    app.register_blueprint(attendance_view_bp, url_prefix='/attendances')
+    app.register_blueprint(charts_view_bp, url_prefix='/charts')
 
 
     @app.route('/')

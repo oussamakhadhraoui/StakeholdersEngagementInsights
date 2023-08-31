@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Stakeholders Engagement Insights</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boosted/dist/css/boosted.min.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .content {
+            flex-grow: 1;
+        }
+
+        .footer {
+            margin-top: auto;
+        }
+
+        .sticky-pagination {
+            position: sticky;
+            bottom: 0;
+            z-index: 1000;
+            background-color: #fff;
+            padding: 20px;
+        }
+
+        .boosted-orange {
+            color: #FF7900;
+        }
+
+        .card {
+    border: 1px solid #FF7900; /* boosted-orange border */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 6px 12px rgba(255, 121, 0, 0.15); /* boosted-orange shadow on hover */
+}
+
+.card-title {
+    color: #FF7900; /* boosted-orange title */
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+    </style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/boosted/dist/js/boosted.bundle.min.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/maps/modules/map.js"></script>
+<script src="https://code.highcharts.com/mapdata/custom/world.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boosted/dist/css/boosted.min.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <img src="{{ url_for('static', filename='assets/orange.svg') }}" width="50" height="50" alt="Home" loading="lazy">
+                <span class="ms-2 boosted-orange">Meeting Insights</span>
+                <span class="ms-2">Home</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse align-items-end" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" id="navbarDropdownButton" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Meetings
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" id="dropdownMeeting" data-label="Meeting" href="/meetings">Meetings</a></li>
+                            <li><a class="dropdown-item" id="dropdownMeetingType" data-label="Meeting type" href="/meeting-types">Meeting types</a></li>
+                            <li><a class="dropdown-item" id="dropdownRole" data-label="Role" href="/roles">Roles</a></li>
+                            <li><a class="dropdown-item" id="dropdownPerson" data-label="Person" href="/persons">People</a></li>
+                            <li><a class="dropdown-item" id="dropdownInvitation" data-label="Invitation" href="/invitations">Invitations</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" id="navbarDropdownButton2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Attendance
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdownButton2">
+                            <li><a class="dropdown-item" id="dropdownAffiliation" data-label="Affiliation" href="/affiliations">Affiliations</a></li>
+                            <li><a class="dropdown-item" id="dropdownAttendance" data-label="Attendance" href="/attendances">Attendance</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/charts">Charts</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Your Content Starts Here -->
+    <div class="container my-4">
+        <!-- Content for Chart 2 -->
+        <h3 class="boosted-orange mt-4">Attendance by Country</h3>
+        <select id="meetingTypeDropdownMap" class="form-select boosted-orange-border">
+            <!-- Options will be populated dynamically -->
+        </select>
+    
+        <div id="container" class="mt-4"></div>
+    
+        <!-- Content for Chart 1 -->
+        <h3 class="boosted-orange">Audience Evolution by Zone</h3>
+        <select id="meetingTypeDropdown" class="form-select boosted-orange-border">
+            <!-- Options will be populated dynamically -->
+        </select>
+    
+        <select id="timeIntervalDropdown" class="form-select boosted-orange-border mt-2">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+        </select>
+    
+        <div id="chartContainer1" class="mt-4"></div>
+
+        <!-- Content for Attendance Analysis -->
+        <h3 class="boosted-orange mt-4">Attendance Analysis</h3>
+
+        <div class="row mt-2">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Attended</h5>
+                        <p class="card-text" id="totalAttended">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Absent</h5>
+                        <p class="card-text" id="totalAbsent">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Presence Percentage</h5>
+                        <p class="card-text" id="presencePercentage">0%</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Representativeness</h5>
+                        <p class="card-text" id="representativenessPercentage">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dropdown for Chart 3 -->
+        <select id="meetingDropdown" class="form-select boosted-orange-border mt-3">
+            <!-- This will be populated using JavaScript -->
+        </select>
+
+        <!-- Chart Container -->
+        <div id="chartContainer3" class="mt-4"></div>
+    </div>
+
+
+<script>
+    // Scripts for Chart 1
+    $(document).ready(function() {
+        // Function to format the date
+        function formatDate(input) {
+            const date = new Date(input);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Fetch available meeting types and populate the dropdown
+        $.get("/api/v1/meeting-types", function(response) {
+            const dropdown = $('#meetingTypeDropdown');
+            const types = response.items;
+            types.forEach(type => {
+                dropdown.append(new Option(type.type, type.id));
+            });
+
+            // Fetch and display data for the initially selected meeting type and time interval
+            fetchDataAndDisplayChart($('#meetingTypeDropdown').val(), $('#timeIntervalDropdown').val());
+        });
+
+        // Function to fetch and display data based on meeting type and time interval
+function fetchDataAndDisplayChart(meetingTypeId, timeInterval) {
+    $.get(`/api/v1/charts/1?meetingType=${meetingTypeId}&timeInterval=${timeInterval}`, function(data) {
+        let categories = [];
+        let seriesData = [];
+
+        if (data && data.chartType === "bar" && data.data && data.data.length > 0) {
+            let series = {};
+
+            data.data.forEach(item => {
+                let dateStr = item && item.Date ? formatDate(item.Date) : "Unknown Date";
+                let affiliationName = item.AffiliationName || "Unknown Affiliation";
+
+                if (!categories.includes(dateStr)) {
+                    categories.push(dateStr);
+                }
+                if (!series[affiliationName]) {
+                    series[affiliationName] = Array(categories.length).fill(0);
+                }
+                series[affiliationName][categories.indexOf(dateStr)] = item.participants;
+            });
+
+            for (let affiliation in series) {
+                seriesData.push({
+                    name: affiliation,
+                    data: series[affiliation]
+                });
+            }
+        }
+
+        Highcharts.chart('chartContainer1', {
+            chart: {
+                type: 'column'  // Ensure this is set to 'column' for vertical bars
+            },
+            title: {
+                text: 'Participants by Date'
+            },
+            xAxis: {
+                title: {
+                    text: 'Date'
+                },
+                categories: categories,
+                type: 'category'
+            },
+            yAxis: {
+                title: {
+                    text: 'Number of Participants'
+                },
+                min: 0
+            },
+            series: seriesData,
+            noData: {
+                style: {
+                    fontWeight: 'bold',
+                    fontSize: '15px',
+                    color: '#303030'
+                }
+            }
+        });
+    });
+}
+
+
+        // Fetch and display data for the initially selected meeting type and time interval
+        fetchDataAndDisplayChart($('#meetingTypeDropdown').val(), $('#timeIntervalDropdown').val());
+
+        // Update the chart when a different meeting type or time interval is selected
+        $('#meetingTypeDropdown, #timeIntervalDropdown').change(function() {
+            fetchDataAndDisplayChart($('#meetingTypeDropdown').val(), $('#timeIntervalDropdown').val());
+        });
+    });
+
+    // Scripts for Chart 2
+    $(document).ready(function() {
+        // Fetch available meeting types and populate the dropdown
+        $.get("/api/v1/meeting-types", function(response) {
+            const dropdown = $('#meetingTypeDropdownMap');
+            const types = response.items;
+            types.forEach(type => {
+                dropdown.append(new Option(type.type, type.id));
+            });
+
+            // Fetch and display the map data for the initially selected meeting type
+            fetchDataAndDisplayMap($('#meetingTypeDropdownMap').val());
+        });
+
+        // Function to fetch and display data based on the selected meeting type
+        function fetchDataAndDisplayMap(meetingTypeId) {
+            $.get(`/api/v1/charts/2?meetingType=${meetingTypeId}`, function(data) {
+                if (data && data.chartType === "map" && data.data) {
+                    const mapData = data.data.map(item => ({
+    "key": item.Alpha3Code,
+    "value": Math.round(item.AttendanceRate)
+}));
+
+
+                    // Instantiate chart
+                    Highcharts.mapChart('container', {
+                        chart: {
+                            map: 'custom/world'
+                        },
+                        title: {
+                            text: null
+                        },
+                        mapNavigation: {
+                            enabled: true,
+                            buttonOptions: {
+                                alignTo: 'spacingBox',
+                                x: 10
+                            }
+                        },
+                        colorAxis: {
+                            min: 0,
+                            max: 100,  // Attendance rate can be up to 100%
+                            stops: [
+                                [0, '#E6FFE6'],  // Very light green
+                                [0.5, '#66FF66'],  // Medium green
+                                [1, '#009900']  // Dark green
+                            ]
+                        },
+                        legend: {
+                            layout: 'vertical',
+                            align: 'left',
+                            verticalAlign: 'bottom'
+                        },
+                        series: [{
+                            data: mapData,
+                            joinBy: ['iso-a3', 'key'],
+                            name: 'Attendance Rate (%)',
+                            borderColor: 'black',
+                            borderWidth: 0.5,
+                            states: {
+                                hover: {
+                                    borderColor: 'gray'
+                                }
+                            }
+                        }]
+                    });
+                }
+            });
+        }
+
+        // Fetch and display the map data for the initially selected meeting type
+        fetchDataAndDisplayMap($('#meetingTypeDropdownMap').val());
+
+        // Update the map when a different meeting type is selected
+        $('#meetingTypeDropdownMap').change(function() {
+            fetchDataAndDisplayMap($('#meetingTypeDropdownMap').val());
+        });
+    });
+
+    // Scripts for Attendance Analysis
+    $(document).ready(function() {
+        // Fetch the list of meetings from the backend
+        $.get("/api/v1/meetings", function(response) {
+            const meetings = response.items;
+            const dropdown = $("#meetingDropdown");
+            meetings.forEach(meeting => {
+                // Format the date
+                const date = new Date(meeting.start_date);
+                const formattedDate = `${date.toLocaleString('en-US', { weekday: 'short' })}, ${date.getDate()} ${date.toLocaleString('en-US', { month: 'short' })}`;
+
+                // Concatenate title and formatted date
+                const dropdownLabel = `${meeting.title} - ${formattedDate}`;
+
+                dropdown.append(new Option(dropdownLabel, meeting.id));
+            });
+
+            // Initial chart render
+            fetchAndRenderChart(meetings[0].id);
+        });
+
+        // On dropdown change, update the chart
+        $("#meetingDropdown").change(function() {
+            fetchAndRenderChart($(this).val());
+        });
+
+        function fetchAndRenderChart(meetingId) {
+            // Fetch bar chart data
+            $.get(`/api/v1/charts/3?meetingId=${meetingId}`, function(data) {
+                // Render chart
+                Highcharts.chart('chartContainer3', {
+                    chart: {
+                        type: 'column'
+                    },
+                    title: {
+                        text: 'Attendance Analysis'
+                    },
+                    xAxis: {
+                        categories: data.data.map(item => item.Affiliation),
+                        crosshair: true
+                    },
+                    yAxis: {
+                        min: 0,
+                        title: {
+                            text: 'Number of People'
+                        }
+                    },
+                    tooltip: {
+                        headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                        pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                            '<td style="padding:0"><b>{point.y}</b></td></tr>',
+                        footerFormat: '</table>',
+                        shared: true,
+                        useHTML: true
+                    },
+                    plotOptions: {
+                        column: {
+                            pointPadding: 0.2,
+                            borderWidth: 0
+                        }
+                    },
+                    series: [{
+                        name: 'Attended',
+                        data: data.data.map(item => Math.round(item.Attended))
+                    }, {
+                        name: 'Absent',
+                        data: data.data.map(item => Math.round(item.Absent)),
+                        color: 'orange'
+                    }]
+                });
+            });
+
+            // Fetch visual card data
+            $.get(`/api/v1/charts/4?meetingId=${meetingId}`, function(data) {
+                if (data.data) {
+                    $("#totalAttended").text(data.data.TotalAttended || "N/A");
+                    $("#totalAbsent").text(data.data.TotalAbsent || "N/A");
+
+                    // Check if PresencePercentage is a number before calling .toFixed()
+                    if (typeof data.data.PresencePercentage === 'number') {
+                        $("#presencePercentage").text(data.data.PresencePercentage.toFixed(2) + "%");
+                    } else {
+                        $("#presencePercentage").text("N/A");
+                    }
+
+                    $("#representativenessPercentage").text(data.data.UniqueAffiliations || "N/A");
+                }
+            });
+        }
+    });
+</script>
+<footer class="footer bg-dark navbar-dark">
+    <div class="container-xxl footer-terms">
+      <ul class="navbar-nav gap-md-3">
+        <li class="fw-bold">© Orange 2023</li>
+      </ul>
+    </div>
+  </footer> 
+</body>
+</html>
+
+

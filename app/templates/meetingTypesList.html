@@ -61,9 +61,29 @@
                       <li><a class="dropdown-item" id="dropdownInvitation" data-label="Invitation" href="/invitations">Invitations</a></li>
                   </ul>
               </li>
-          </ul>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" id="navbarDropdownButton2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Affiliations
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdownButton2">
+                    <li><a class="dropdown-item" id="dropdownAffiliation" data-label="Affiliation" href="/affiliations">Affiliations</a></li>
+                    <li><a class="dropdown-item" id="dropdownAttendance" data-label="Attendance" href="/attendances">Attendance</a></li>
+                </ul>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/charts">Charts</a>
+          </li>
+        </ul>
       </div>    
       </div>
+      <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-body text-center" id="successModalMessage">
+            </div>
+          </div>
+        </div>
+      </div>  
     </nav>
   <div class="container my-4">
     <div class="d-flex justify-content-between align-items-center"> 
@@ -96,21 +116,36 @@
   </div>
   <nav aria-label="Page navigation" class="sticky-pagination">
     <ul class="pagination justify-content-end">
-        {% if pagination.has_prev %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('meetingType_view.index', page=pagination.prev_num) }}">Previous</a></li>
-        {% endif %}
-
-        {% for page_num in range(1, pagination.total_pages + 1) %}
-        <li class="page-item {% if page_num == pagination.current_page %}active{% endif %}">
-          <a class="page-link" href="{{ url_for('meetingType_view.index', page=page_num) }}">{{ page_num }}</a>
-        </li>
-        {% endfor %}
-
-        {% if pagination.has_next %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('meetingType_view.index', page=pagination.next_num) }}">Next</a></li>
-        {% endif %}
-      </ul>
-    </nav>
+  
+      {% if pagination.has_prev %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('meetingType_view.index', page=pagination.prev_num) }}">Previous</a></li>
+      {% endif %}
+  
+      {% set start_page = [pagination.current_page - 3, 1] | max %}
+      {% set end_page = [pagination.current_page + 3, pagination.total_pages] | min %}
+  
+      {% if start_page > 1 %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('meetingType_view.index', page=1) }}">1</a></li>
+      <li class="page-item disabled"><span class="page-link">...</span></li>
+      {% endif %}
+  
+      {% for page_num in range(start_page, end_page + 1) %}
+      <li class="page-item {% if page_num == pagination.current_page %}active{% endif %}">
+        <a class="page-link" href="{{ url_for('meetingType_view.index', page=page_num) }}">{{ page_num }}</a>
+      </li>
+      {% endfor %}
+  
+      {% if end_page < pagination.total_pages %}
+      <li class="page-item disabled"><span class="page-link">...</span></li>
+      <li class="page-item"><a class="page-link" href="{{ url_for('meetingType_view.index', page=pagination.total_pages) }}">{{ pagination.total_pages }}</a></li>
+      {% endif %}
+  
+      {% if pagination.has_next %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('meetingType_view.index', page=pagination.next_num) }}">Next</a></li>
+      {% endif %}
+  
+    </ul>
+  </nav>
     <div class="modal fade" id="MeetingTypeModal" tabindex="-1" role="dialog" aria-labelledby="MeetingTypeModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -153,134 +188,191 @@
         </div>
     </div>    
     <script>
-        $(document).ready(function(){
-          let mode = ''; // This will switch between 'create' and 'edit'
-        
-          // Save changes button click event
-          $("#saveChangesButton").click(function(){
-            $("#meetingTypeForm").trigger('submit');
-         });
-        
-          // Button click handler for edit
-          $(".editButton").click(function(){
-            mode = 'edit';
-        
-            const typeId = $(this).attr("data-id");
-        
-            // Fetch the meeting type details from your API
-            $.get("/api/v1/meeting-types/" + typeId, function(data) {
-              $("#meetingTypeID").val(data.id);
-              $("#Type").val(data.type);
-        
-              // Change the modal title and button text for editing
-              $("#MeetingTypeModalLabel").text('Edit Meeting Type');
-              $("#saveChangesButton").text('Save Changes');
-        
-              // Show the modal
-              $("#MeetingTypeModal").modal("show");
-            });
+      $(document).ready(function(){
+        let mode = ''; // This will switch between 'create' and 'edit'
+    
+        function validateForm() {
+          let isValid = true;
+    
+          // Check all required fields
+          $("#meetingTypeForm input[required]").each(function() {
+            const parentDiv = $(this).closest('.form-group');
+    
+            if ($(this).val().trim() === "") {
+              $(this).css("border", "1px solid red");
+              if (!parentDiv.find('.error-message').length) {
+                // Append an error message if it doesn't already exist
+                parentDiv.append('<div class="error-message text-danger">Field required</div>');
+              }
+              isValid = false;
+            } else {
+              $(this).css("border", "");
+              parentDiv.find('.error-message').remove(); // Remove the error message
+            }
           });
-        
-          // Button click handler for create
-          $("#addNewMeetingTypeButton").click(function(){
-            mode = 'create';
-        
-            // Clear the form fields
-            $("#meetingTypeID").val('');
-            $("#Type").val('');
-        
-            // Change the modal title and button text for adding new
-            $("#MeetingTypeModalLabel").text('Add New Meeting Type');
-            $("#saveChangesButton").text('Create Meeting Type');
-        
+    
+          return isValid;
+        }
+    
+        // Save changes button click event
+        $("#saveChangesButton").click(function(){
+          if (validateForm()) { // Validate the form before submitting
+            $("#meetingTypeForm").trigger('submit');
+          }
+        });
+        function showPopup(message) {
+  // Set the message in the modal
+  $("#successModalMessage").text(message);
+
+  // Show the modal
+  $("#successModal").modal("show");
+
+  // Hide the modal after 3 seconds (3000 milliseconds)
+  setTimeout(function() {
+    $("#successModal").modal("hide");
+  }, 4000);
+}
+    
+        // Button click handler for edit
+        $(".editButton").click(function(){
+          mode = 'edit';
+    
+          const typeId = $(this).attr("data-id");
+    
+          // Fetch the meeting type details from your API
+          $.get("/api/v1/meeting-types/" + typeId, function(data) {
+            $("#meetingTypeID").val(data.id);
+            $("#Type").val(data.type);
+    
+            // Change the modal title and button text for editing
+            $("#MeetingTypeModalLabel").text('Edit Meeting Type');
+            $("#saveChangesButton").text('Save Changes');
+    
             // Show the modal
             $("#MeetingTypeModal").modal("show");
           });
-        
-          $("#meetingTypeForm").on("submit", function(e) {
-            e.preventDefault();  // Prevent the default form submission
-        
-            // Create data object from form inputs
-            let data = {
-              "Type": $("#Type").val(),
-            };
-        
-            if (mode === 'edit') {
-              // Use Fetch API to send a PUT request to the correct URL
-              const typeId = $("#meetingTypeID").val();
-              fetch(`/api/v1/meeting-types/${typeId}`, {
-                method: "PUT",
-                headers: {
-                  "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data)
-              })
-              .then(response => response.json())
-              .then(data => {
-                // Close the modal and reload the page to update the view
-                $("#MeetingTypeModal").modal("hide");
-                location.reload();
-              })
-              .catch((error) => {
-                console.error('Error:', error);
-              });
-            }
-            else if (mode === 'create') {
-              // Use Fetch API to send a POST request to the correct URL
-              fetch(`/api/v1/meeting-types`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data)
-              })
-              .then(response => response.json())
-              .then(data => {
-                // Close the modal and reload the page to update the view
-                $("#MeetingTypeModal").modal("hide");
-                location.reload();
-              })
-              .catch((error) => {
-                console.error('Error:', error);
-              });
-            }
-          });
-        
-          // Button click handler for delete
-          $(".deleteButton").click(function(){
-              const typeId = $(this).attr("data-id");
-        
-              // Store the meeting type id to the hidden field
-              $("#typeToDelete").val(typeId);
-        
-              // Show the delete confirmation modal
-              $("#deleteTypeConfirmationModal").modal("show");
-          });
-        
-          // Button click handler for confirm delete in the modal
-          $("#confirmTypeDeleteButton").click(function(){
-              const typeId = $("#typeToDelete").val();
-              
-              // Send a DELETE request to your API
-              fetch(`/api/v1/meeting-types/${typeId}`, {
-                    method: "DELETE"
-                })
-              .then(response => {
-              if (response.ok) {
-                // Close the modal and reload the page to update the view
-                $("#deleteTypeConfirmationModal").modal("hide");
-                location.reload();
-              } else {
-                // Handle any errors here
-                console.error('Error:', response.statusText);
-               }
-             })
-              .catch((error) => {
-                  console.error('Error:', error);
-               });
-             });
         });
-</script>                           
+    
+        // Event handler for when the meeting type modal is closed
+        $("#MeetingTypeModal").on('hidden.bs.modal', function() {
+          if (mode === 'create') {
+            // Clear the form fields
+            $("#meetingTypeID").val('');
+            $("#Type").val('');
+    
+            // Remove any validation messages
+            $("#meetingTypeForm input").css("border", "");
+            $(".error-message").remove();
+    
+            // Change the modal title and button text back to 'Create'
+            $("#MeetingTypeModalLabel").text('Add New Meeting Type');
+            $("#saveChangesButton").text('Create Meeting Type');
+          }
+        });
+    
+        // Button click handler for create
+        $("#addNewMeetingTypeButton").click(function(){
+          mode = 'create';
+    
+          // Clear the form fields
+          $("#meetingTypeID").val('');
+          $("#Type").val('');
+    
+          // Change the modal title and button text for adding new
+          $("#MeetingTypeModalLabel").text('Add New Meeting Type');
+          $("#saveChangesButton").text('Create Meeting Type');
+    
+          // Show the modal
+          $("#MeetingTypeModal").modal("show");
+        });
+    
+        $("#meetingTypeForm").on("submit", function(e) {
+          e.preventDefault();  // Prevent the default form submission
+    
+          // Create data object from form inputs
+          let data = {
+            "Type": $("#Type").val(),
+          };
+    
+          if (mode === 'edit') {
+            // Use Fetch API to send a PUT request to the correct URL
+            const typeId = $("#meetingTypeID").val();
+            fetch(`/api/v1/meeting-types/${typeId}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+              // Close the modal and reload the page to update the view
+              $("#MeetingTypeModal").modal("hide");
+              showPopup("Meeting Type Edited"); // Show the popup
+              location.reload();
+            })
+            .catch((error) => {
+              console.error('Error:', error);
+            });
+          }
+          else if (mode === 'create') {
+            // Use Fetch API to send a POST request to the correct URL
+            fetch(`/api/v1/meeting-types`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+              // Close the modal and reload the page to update the view
+              $("#MeetingTypeModal").modal("hide");
+              showPopup("Meeting Type Created"); // Show the popup
+              location.reload();
+            })
+            .catch((error) => {
+              console.error('Error:', error);
+            });
+          }
+        });
+    
+        // Button click handler for delete
+        $(".deleteButton").click(function(){
+          const typeId = $(this).attr("data-id");
+    
+          // Store the meeting type id to the hidden field
+          $("#typeToDelete").val(typeId);
+    
+          // Show the delete confirmation modal
+          $("#deleteTypeConfirmationModal").modal("show");
+        });
+    
+        // Button click handler for confirm delete in the modal
+        $("#confirmTypeDeleteButton").click(function(){
+          const typeId = $("#typeToDelete").val();
+    
+          // Send a DELETE request to your API
+          fetch(`/api/v1/meeting-types/${typeId}`, {
+                method: "DELETE"
+            })
+          .then(response => {
+            if (response.ok) {
+              // Close the modal and reload the page to update the view
+              $("#deleteTypeConfirmationModal").modal("hide");
+              showPopup("Meeting Type Deleted"); // Show the popup
+              location.reload();
+            } else {
+              // Handle any errors here
+              console.error('Error:', response.statusText);
+             }
+           })
+          .catch((error) => {
+            console.error('Error:', error);
+          });
+        });
+      });
+    </script>                               
 <footer class="footer bg-dark navbar-dark">
     <div class="container-xxl footer-terms">
       <ul class="navbar-nav gap-md-3">
